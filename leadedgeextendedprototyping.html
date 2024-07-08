@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Lead Edge Maze</title>
+    <style>
+        body {
+          //background-color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-top: 50px; /* 50 pixels padding from the top */
+            margin: 0;
+            height: 100vh;
+            justify-content: start;
+        }
+        canvas {
+            border: 1px solid #000;
+        }
+        button {
+            background-color: deepskyblue; /* Deep sky blue background */
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 20px 0; /* Space between the canvas and button */
+            cursor: pointer;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23); /* 3px drop shadow */
+            border-radius: 5px; /* Optional: Rounded corners for the button */
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+<img src="https://static.wixstatic.com/media/2451db_cc9e86fb9d3045ecb0861ed65ff9e86d~mv2.png" alt="Lead Edge" style="max-width: 40%; height:auto;">
+    <canvas id="mazeCanvas" width="600" height="600"></canvas>
+    <button onclick="generateMaze()">Generate New Maze</button>
+
+    <script>
+        const canvas = document.getElementById('mazeCanvas');
+        const ctx = canvas.getContext('2d');
+        const mazeSize = 600; // Example size, adjust as needed
+        const cellSize = 30; // Size of each cell/square in the maze
+
+        function generateMaze() {
+            ctx.clearRect(0, 0, mazeSize, mazeSize);
+            
+            // Placeholder for the maze generation logic based on "Lead Edge"
+
+            for (let x = 0; x <= mazeSize; x += cellSize) {
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, mazeSize);
+            }
+            for (let y = 0; y <= mazeSize; y += cellSize) {
+                ctx.moveTo(0, y);
+                ctx.lineTo(mazeSize, y);
+            }
+            ctx.strokeStyle = "#aaa";
+            ctx.stroke();
+        }
+
+        generateMaze();
+    </script>
+</body>
+</html>

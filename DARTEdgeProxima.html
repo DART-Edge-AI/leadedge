@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html>
+<head>
+   <title>DART Edge Proxima (NYSE) Graph</title>
+   <style>
+      body {
+         color: white;
+         font-weight: bold;
+         font-family: Arial, sans-serif;
+         //background-color: deepskyblue;
+      }
+
+      h1 {
+         color: white;
+         font-weight: bold;
+      }
+   </style>
+   <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+</head>
+<body>
+   <h1>DART Edge Proxima (NYSE) Graph</h1>
+   <p>
+     - Ticker 1 meets ticker 4 by 2.5 years.
+- Ticker 2 meets ticker 4 by half of ticker 3 meeting ticker 4 in 5 years.
+- Ticker 3 meets ticker 4 by both ticker 1 and ticker 2 combined in 5 years.
+- Ticker 5 is met by ticker 2 plus ticker 3 plus ticker 1 in 5 years.
+   </p>
+
+   <form>
+      <label>Enter Ticker A:</label>
+      <input type="text" id="ticker-a-input">
+      <br>
+      <br>
+      <label>Enter Ticker B:</label>
+      <input type="text" id="ticker-b-input">
+      <br>
+      <br>
+      <label>Enter Ticker C:</label>
+      <input type="text" id="ticker-c-input">
+      <br>
+      <br>
+      <label>Enter Ticker D:</label>
+      <input type="text" id="ticker-d-input">
+      <br>
+      <br>
+      <label>Enter Ticker E:</label>
+      <input type="text" id="ticker-e-input">
+      <br>
+      <br>
+      <label>Enter Result Probability Future Projection (in years):</label>
+      <input type="number" step="0.1" id="time-frame-input">
+      <br>
+      <br>
+      <button type="button" onclick="getData()">Get Data</button>
+      <br>
+      <br>
+   </form>
+   <br>
+   
+   <div id="chart1"></div>
+   <br>
+   
+   <div id="chart2"></div>
+   <br>
+   
+   <table id="table"></table>
+   <br>
+   
+   <div id="ticker-prices"></div>
+   <br>
+   
+   <script>
+      function getData() {
+         const tickerA = document.getElementById("ticker-a-input").value.toUpperCase();
+         const tickerB = document.getElementById("ticker-b-input").value.toUpperCase();
+         const tickerC = document.getElementById("ticker-c-input").value.toUpperCase();
+         const tickerD = document.getElementById("ticker-d-input").value.toUpperCase();
+         const tickerE = document.getElementById("ticker-e-input").value.toUpperCase();
+         const timeFrame = parseFloat(document.getElementById("time-frame-input").value);
+
+         const urlA = `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${tickerA}&apikey=QBY6DAPYL7LMO7PG`;
+         const urlB = `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${tickerB}&apikey=QBY6DAPYL7LMO7PG`;
+         const urlC = `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${tickerC}&apikey=QBY6DAPYL7LMO7PG`;
+         const urlD = `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${tickerD}&apikey=QBY6DAPYL7LMO7PG`;
+         const urlE = `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${tickerE}&apikey=QBY6DAPYL7LMO7PG`;
+
+         // Fetch data for all the tickers
+         Promise.all([fetch(urlA), fetch(urlB), fetch(urlC), fetch(urlD), fetch(urlE)])
+            .then((responses) => {
+               // Convert all responses to JSON
+               return Promise.all(responses.map((response) => response.json()));
+            })
+            .then((data) => {
+               const tickerData2 = []; // Data for projected fluctuations
+               const ticker1LatestPrice = parseFloat(data[0]["Global Quote"]["05. price"]);
+               const ticker2LatestPrice = parseFloat(data[1]["Global Quote"]["05. price"]);
+               const ticker3LatestPrice = parseFloat(data[2]["Global Quote"]["05. price"]);
+               const ticker4LatestPrice = parseFloat(data[3]["Global Quote"]["05. price"]);
+               const ticker5LatestPrice = parseFloat(data[4]["Global Quote"]["05. price"]);
+
+               // Calculate projected closing prices over the specified time frame
+               const numberOfSteps = timeFrame * 252; // Assuming 252 trading days in a year
+               const timeStep = timeFrame / numberOfSteps;
+
+               const ticker1ProjectedClosingPrices = [ticker1LatestPrice];
+               const ticker4ProjectedClosingPrices = [ticker1LatestPrice + 2.5 * (ticker4LatestPrice - ticker1LatestPrice) * timeStep];
+               const ticker3ProjectedClosingPrices = [ticker4ProjectedClosingPrices[0] * 2 / 5];
+               const ticker2ProjectedClosingPrices = [ticker3ProjectedClosingPrices[0] * 2 / 5];
+               const ticker5ProjectedClosingPrices = [ticker1ProjectedClosingPrices[0] + ticker2ProjectedClosingPrices[0] + ticker3ProjectedClosingPrices[0]];
+
+               // Creating traces for projected fluctuations
+               const trace6 = {
+                  x: generateDates(timeFrame),
+                  y: ticker1ProjectedClosingPrices,
+                  type: "scatter",
+                  name: tickerA,
+               };
+               const trace7 = {
+                  x: generateDates(timeFrame),
+                  y: ticker2ProjectedClosingPrices,
+                  type: "scatter",
+                  name: tickerB,
+               };
+               const trace8 = {
+                  x: generateDates(timeFrame),
+                  y: ticker3ProjectedClosingPrices,
+                  type: "scatter",
+                  name: tickerC,
+               };
+               const trace9 = {
+                  x: generateDates(timeFrame),
+                  y: ticker4ProjectedClosingPrices,
+                  type: "scatter",
+                  name: tickerD,
+               };
+               const trace10 = {
+                  x: generateDates(timeFrame),
+                  y: ticker5ProjectedClosingPrices,
+                  type: "scatter",
+                  name: tickerE,
+               };
+
+               // Adding traces for projected fluctuations
+               tickerData2.push(trace6, trace7, trace8, trace9, trace10);
+
+               const layout1 = {
+                  title: "Math Specifications",
+                  xaxis: {
+                     title: "Date",
+                  },
+                  yaxis: {
+                     title: "Closing Price ($)",
+                  },
+               };
+
+               const layout2 = {
+                  title: `Projected Fluctuations over ${timeFrame} Years`,
+                  xaxis: {
+                     title: "Date",
+                  },
+                  yaxis: {
+                     title: "Closing Price ($)",
+                  },
+               };
+
+               const config = {
+                  responsive: true,
+               };
+
+               // Display the current ticker prices
+               const tickerPrices = `
+                  <h2>Current Ticker Prices:</h2>
+                  <ul>
+                     <li>${tickerA}: $${ticker1LatestPrice}</li>
+                  <li>${tickerB}: $${ticker2LatestPrice}</li>
+                     <li>${tickerC}: $${ticker3LatestPrice}</li>
+                     <li>${tickerD}: $${ticker4LatestPrice}</li>
+                     <li>${tickerE}: $${ticker5LatestPrice}</li>
+                  </ul>
+               `;
+               document.getElementById("ticker-prices").innerHTML = tickerPrices;
+
+               Plotly.newPlot("chart1", [trace6, trace7, trace8, trace9, trace10], layout1, config);
+               Plotly.newPlot("chart2", tickerData2, layout2, config);
+            })
+            .catch((error) => console.log(error));
+      }
+
+      function generateDates(timeFrame) {
+         const today = new Date();
+         const dates = [];
+         for (let i = 0; i <= timeFrame * 252; i++) {
+            const date = new Date(today.getTime() + i * 24 * 60 * 60 * 1000);
+            dates.push(date);
+         }
+         return dates;
+      }
+   </script>
+</body>
+</html>
+<!doctype html>
+<html> 
+ <head> 
+  <meta charset="UTF-8"> 
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
+  <title>DART Edge NYSE</title> 
+  <style>
+    body {
+      color: white;
+    }
+    h1 {
+      color: white;
+    }
+  </style> 
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> 
+  <script>
+    $(document).ready(function() {
+      // Define the API key and the base URL for Alpha Vantage
+      const apiKey = "QBY6DAPYL7LMO7PG";
+      const baseURL = "https://www.alphavantage.co/query";
+
+      // Define the NYSE symbols you want to retrieve data for
+      const symbols = ["MMAT", "MP", "AA", "NOC", "AAPL"];
+
+      // Define a function to make API requests
+      function makeAPIRequest(symbol, completionHandler) {
+        // Construct the URL for the API request
+        const url = `${baseURL}?function=GLOBAL_QUOTE&symbol=${symbol}&apikey=${apiKey}`;
+
+        // Make the API request using jQuery
+        $.getJSON(url, function(response) {
+          if (response.hasOwnProperty("Global Quote")) {
+            const quote = response["Global Quote"];
+            if (quote.hasOwnProperty("05. price")) {
+              const price = quote["05. price"];
+              completionHandler(symbol, price);
+            } else {
+              console.error(`Price not found for ${symbol}`);
+            }
+          } else {
+            console.error(`Quote not found for ${symbol}`);
+          }
+        }).fail(function(jqXHR, textStatus, errorThrown) {
+          console.error(`Error making API request for ${symbol}: ${errorThrown}`);
+        });
+      }
+
+      // Define a function to refresh the stock prices
+      function refreshPrices() {
+        symbols.forEach(function(symbol) {
+          makeAPIRequest(symbol, function(symbol, price) {
+            $(`#${symbol}`).text(price);
+          });
+        });
+      }
+
+      // Set up the interface with the initial stock prices
+      symbols.forEach(function(symbol) {
+        $(`#${symbol}`).text("Loading...");
+        makeAPIRequest(symbol, function(symbol, price) {
+          $(`#${symbol}`).text(price);
+        });
+      });
+
+      // Set up the auto-refresh functionality
+      setInterval(refreshPrices, 1000);
+    });
+  </script> 
+ </head> 
+ <body> 
+  <h1>DART Edge NYSE</h1> 
+  <table> 
+   <thead> 
+    <tr> 
+     <th>Symbol</th> 
+     <th>Price</th> 
+    </tr> 
+   </thead> 
+   <tbody> 
+    <tr> 
+     <td>MMAT</td> 
+     <td id="MMAT"></td> 
+    </tr> 
+    <tr> 
+     <td>MP</td> 
+     <td id="MP"></td> 
+    </tr> 
+    <tr> 
+     <td>AA</td> 
+     <td id="AA"></td> 
+    </tr> 
+    <tr> 
+     <td>NOC</td> 
+     <td id="NOC"></td> 
+    </tr> 
+    <tr> 
+     <td>AAPL</td> 
+     <td id="AAPL"></td> 
+    </tr> 
+   </tbody> 
+  </table> 
+ 
+</body></html>
+    

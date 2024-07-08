@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aurora Script Enhanced Image Generator</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+            font-family: Arial, sans-serif;
+        }
+        canvas {
+            border: 1px solid #000;
+        }
+        button, input {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        .log {
+            margin-top: 20px;
+            width: 80%;
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #000;
+            background-color: #fff;
+            padding: 10px;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+        }
+        .thumbnail {
+            margin-top: 20px;
+            width: 150px;
+            height: auto;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas" width="800" height="600"></canvas>
+    <button id="generateButton">Generate Image</button>
+    <button id="saveButton">Save as JPG</button>
+    <div>
+        <input type="file" id="uploadFile1">
+        <img id="thumbnail1" class="thumbnail" style="display:none;">
+    </div>
+    <div>
+        <input type="file" id="uploadFile2">
+        <img id="thumbnail2" class="thumbnail" style="display:none;">
+    </div>
+    <div class="log" id="log"></div>
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const logDiv = document.getElementById('log');
+        const uploadFile1 = document.getElementById('uploadFile1');
+        const uploadFile2 = document.getElementById('uploadFile2');
+        const thumbnail1 = document.getElementById('thumbnail1');
+        const thumbnail2 = document.getElementById('thumbnail2');
+
+        const themes = [
+            { background: '#ffcccc', line: '#ff0000', chest: '#800000' },
+            { background: '#ccffcc', line: '#00ff00', chest: '#008000' },
+            { background: '#ccccff', line: '#0000ff', chest: '#000080' },
+            { background: '#ffffcc', line: '#ffff00', chest: '#808000' },
+        ];
+
+        let log = [];
+        let uploadedImage1 = null;
+        let uploadedImage2 = null;
+
+        function getRandomTheme() {
+            return themes[Math.floor(Math.random() * themes.length)];
+        }
+
+        function drawCutWithChest() {
+            const theme = getRandomTheme();
+            ctx.fillStyle = theme.background;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ctx.strokeStyle = theme.line;
+            ctx.lineWidth = 5;
+            ctx.beginPath();
+            ctx.moveTo(100, 100);
+            ctx.lineTo(700, 500);
+            ctx.stroke();
+
+            const chestPosition = { x: 400, y: 300 };
+
+            if (uploadedImage1) {
+                ctx.drawImage(uploadedImage1, chestPosition.x - 50, chestPosition.y - 50, 100, 100);
+            } else {
+                ctx.fillStyle = theme.chest;
+                ctx.fillRect(chestPosition.x - 25, chestPosition.y - 25, 50, 50);
+                ctx.strokeRect(chestPosition.x - 25, chestPosition.y - 25, 50, 50);
+            }
+
+            if (uploadedImage2) {
+                ctx.drawImage(uploadedImage2, chestPosition.x - 25, chestPosition.y - 25, 50, 50);
+            }
+
+            const timestamp = new Date().toISOString();
+            const entry = {
+                theme,
+                timestamp,
+                chestPosition,
+            };
+            log.push(entry);
+            updateLog();
+        }
+
+        function updateLog() {
+            logDiv.innerHTML = log.map(entry => {
+                return `<p>Generated at ${entry.timestamp} with theme: Background (${entry.theme.background}), Line (${entry.theme.line}), Chest (${entry.theme.chest})</p>`;
+            }).join('');
+        }
+
+        function handleFileUpload(event, thumbnailElement, setImage) {
+            const files = event.target.files;
+            if (files.length > 0) {
+                const file = files[0];
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.src = e.target.result;
+                    img.onload = () => {
+                        thumbnailElement.src = img.src;
+                        thumbnailElement.style.display = 'block';
+                        setImage(img);
+                    };
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        document.getElementById('generateButton').addEventListener('click', drawCutWithChest);
+        document.getElementById('saveButton').addEventListener('click', () => {
+            const link = document.createElement('a');
+            link.download = 'generated_image.jpg';
+            link.href = canvas.toDataURL('image/jpeg');
+            link.click();
+        });
+        uploadFile1.addEventListener('change', (event) => handleFileUpload(event, thumbnail1, (img) => uploadedImage1 = img));
+        uploadFile2.addEventListener('change', (event) => handleFileUpload(event, thumbnail2, (img) => uploadedImage2 = img));
+
+        // Generate the first image on load
+        drawCutWithChest();
+    </script>
+</body>
+</html>

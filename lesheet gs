@@ -1,0 +1,14 @@
+function doGet(e) {
+const ss = SpreadsheetApp.getActiveSpreadsheet();
+const sheet = ss.getSheetByName('Lead Edge');
+const values = sheet.getRange('A1:B2').getValues();
+
+let processedData = {
+a: values[1][0], // Assuming 'a' is in the second row, first column
+b: values[1][1], // Assuming 'b' is in the second row, second column
+// Add other parameters if necessary
+};
+
+return ContentService.createTextOutput(JSON.stringify(processedData))
+.setMimeType(ContentService.MimeType.JSON);
+}

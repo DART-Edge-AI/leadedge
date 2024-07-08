@@ -1,0 +1,493 @@
+
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Lead Edge</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script> <!-- Add GLTFLoader -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/DRACOLoader.js"></script> <!-- Add DRACOLoader for GLTF compression -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/KTX2Loader.js"></script> <!-- Add KTX2Loader for texture compression -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/RGBELoader.js"></script> <!-- Add RGBELoader for environment maps -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/pmrem/PMREMGenerator.js"></script> <!-- Add PMREMGenerator for prefiltered environment maps -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/pmrem/PMREMCubeUVPacker.js"></script> <!-- Add PMREMCubeUVPacker for prefiltered environment maps -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/EffectComposer.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/RenderPass.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/ShaderPass.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/BloomPass.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/exporters/GLTFExporter.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/0.5.0-beta4/html2canvas.min.js"></script>
+<script src="https://jeromeetienne.github.io/AR.js/aframe/build/aframe-ar.js"></script>
+<!-- Include AR.js for Three.js -->
+<script src="https://unpkg.com/ar.js/three/build/ar-nft.min.js"></script>
+<script src="https://unpkg.com/ar.js/three/build/ar.js"></script>
+    <style>
+
+        
+        
+        body {
+              //  background-image: url(leadedge2.jpg);
+           //   background-size: cover;
+         //     background-repeat: no-repeat;
+       //       background-attachment: fixed;
+  //  z-index: -1;
+//    background-position: center center;
+           // padding-top: 50px;
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            //justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            background-color: indigo;  
+     }
+        #loading {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #000;
+            color: #fff;
+            font-size: 24px;
+        }
+        #container {
+            margin-top: 50px;
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            height: 100%;
+            width: 100%;
+        }
+
+        #title {
+            color: white;
+            text-align: center;
+        }
+
+        #title h1 {
+            font-weight: bold;
+        }
+
+        canvas {
+            display: block;
+        }
+
+        #button-container {
+            display: flex;
+            justify-content: space-evenly;
+            margin-bottom: 20px;
+        }
+
+        button {
+            margin: 0 10px;
+            padding: 7px;
+            background-color: deepskyblue;
+            color: #fff;
+            font-size: 18px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.3s;
+        }
+
+        h2 {
+            color: white;
+            font-weight: bold;
+        }
+
+        h3 {
+            color: white;
+            font-weight: bold;
+        }
+
+        a {
+            text-decoration: underline;
+            text-decoration-color: deepskyblue;
+        }
+
+        #mazeSizeSlider {
+            display: block;
+            margin: 20px auto;
+            justify-content: center;
+            align-content: center;
+            width: 300px;
+        }
+
+        #controls {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 25px;
+        }
+
+        #mazeSize {
+            margin-left: 10px;
+            color: white;
+            font-weight: bold;
+        }
+
+        #generationCount {
+            margin-left: 10px;
+            color: white;
+            font-weight: bold;
+        }
+               .mainlogo {
+              display: flex;
+              flex-direction: column;
+              justify-content: center;
+              align-items: center;
+              
+              
+          }
+.logo5 {
+    width: 400px;
+    height: 400px;
+}
+
+    </style>
+</head>
+<body>
+  <div>
+        <div class="mainlogo">
+<a href="https://aist.earth/" target="_blank"><img src="https://static.wixstatic.com/media/2451db_cc9e86fb9d3045ecb0861ed65ff9e86d~mv2.png"  alt="Logo5" class="logo5"></a>
+
+  </div>
+
+    <div id="title" class="LeadEdgeHeader">
+<h1>Lead Edge | <img src="https://static.wixstatic.com/media/2451db_dc6a5d6918e74a9b8b78dc51a5c3593e~mv2.png" alt="Lead Edge Logo" style="vertical-align: middle; width: 300px; height: auto;"/> Maze</h1>
+        <h2>(A Maze Builder In Development) <div>
+          <label2 class="lea">
+            <a href="https://github.com/DART-Edge-AI/Autumn/blob/main/Lead%20Edge%20Algorithm%20for%20Ash%20Tree%20Reflex.pdf" target="_blank">Access Documentation</a>
+        </div></h2>
+    </div>
+    <div id="controls">
+        <input id="mazeSizeSlider" type="range" min="10" max="200" value="50" class="slider">
+        <div id="mazeSize">Maze Size: 50</div>
+        <div id="generationCount">Generation Count: 0</div>
+        <br>
+        <br>
+        <div id="button-container">
+            <button id="generateMazeButton">Generate New Maze</button>
+            <button id="resetCameraButton">Reset Camera</button>
+            <button id="solveMazeButton">Solve Maze</button>
+            <button id="toggleWireframeButton">Toggle Wireframe</button>
+       <button id="exportButton">Export Maze as PNG</button>
+<button id="toggleARButton">Enter AR (inDev)</button>
+            <button id="exportGLBButton">Export GLB</button>
+        </div>
+    </div>
+
+    <div id="container">
+        <canvas id="canvas" width="875" height="875"></canvas>
+    </div>
+</div>
+<script>
+  const scene = new THREE.Scene();
+        const rendererWidth = 875;
+        const rendererHeight = 875;
+        const camera = new THREE.PerspectiveCamera(60, rendererWidth / rendererHeight, 0.1, 100000);
+        const renderer = new THREE.WebGLRenderer({
+            canvas: document.querySelector('#canvas'),
+            alpha: true
+        });
+    
+        renderer.setSize(rendererWidth, rendererHeight);
+
+        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+
+        camera.position.set(225, 225, 225);   controls.update();
+
+
+
+
+
+// Ensure the renderer is set up for shadows
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap; // PCF for softer edges
+
+
+        let a = 50;
+        let b = 2;
+        let r = 0;
+
+        let wallColor = 0x00bfff; // DeepSkyBlue
+
+        let isWireframe = false;
+
+        let generationCount = 0;
+
+        // Add ambient light
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+        scene.add(ambientLight);
+
+        // Add directional light
+       const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
+      directionalLight.position.set(1, 1, 1);
+        scene.add(directionalLight);
+
+        // Update your createWallSegment function to use MeshStandardMaterial
+// Update the material in createWallSegment to MeshStandardMaterial
+// Inside your createWallSegment function
+function createWallSegment(x, z, isBranch = false) {
+  const geometry = new THREE.BoxGeometry(1, 1, 1);
+  const material = new THREE.MeshStandardMaterial({
+    color: 0x00bfff, // Replace with the desired color code
+    roughness: 0.5, // Adjust as needed
+    metalness: 0.7 // Adjust as needed
+  });
+  const wall = new THREE.Mesh(geometry, material);
+  wall.position.set(x, 0.5, z);
+  wall.castShadow = true; // Make sure the wall casts shadows
+  wall.receiveShadow = true; // Make sure the wall can receive shadows
+  scene.add(wall);
+}
+
+/*
+        function D1(a, b) {
+            while (scene.children.length > 0) {
+                scene.remove(scene.children[0]);
+            }
+
+            let entry = Math.floor(Math.random() * a);
+            let exit;
+            do {
+                exit = Math.floor(Math.random() * a);
+            } while (exit === entry);
+
+            for (let i = 0; i < a; i++) {
+                if (i !== entry) createWallSegment(i, 0);
+                if (i !== exit) createWallSegment(i, a - 1);
+                createWallSegment(0, i);
+                createWallSegment(a - 1, i);
+            }
+
+            const pathCells = new Set();
+            pathCells.add(`${entry},0`);
+            pathCells.add(`${exit},${a - 1}`);
+
+            let currentPos = { x: entry, y: 0 };
+            while (currentPos.y < a - 1) {
+                if (currentPos.x < exit) {
+                    currentPos.x++;
+                } else if (currentPos.x > exit) {
+                    currentPos.x--;
+                } else {
+                    currentPos.y++;
+                }
+
+                pathCells.add(`${currentPos.x},${currentPos.y}`);
+            }
+
+            for (let i = 1; i < a - 1; i++) {
+                for (let j = 1; j < a - 1; j++) {
+                    const key = `${i},${j}`;
+                    if (i !== entry && i !== exit && !pathCells.has(key) && Math.random() < 0.5) {
+                        createWallSegment(i, j, true);
+                    }
+                }
+            }
+        }
+*/
+         function generateMaze() {
+    const mazeSize = a; // Define the size of the maze
+    let maze = [...Array(mazeSize)].map(() => Array(mazeSize).fill(false));
+
+    // Pseudo maze generation logic: You'll replace this with your maze generation algorithm
+    // This is where you would use your algorithm to fill the maze array with true/false values
+    // Here's a simple example for illustration purposes:
+    for (let i = 1; i < mazeSize - 1; i++) {
+        for (let j = 1; j < mazeSize - 1; j++) {
+            maze[i][j] = Math.random() < 0.3; // Randomly create walls
+        }
+    }
+
+    // Clear the current scene of existing walls
+    while (scene.children.length > 0) {
+        scene.remove(scene.children[0]);
+    }
+
+    // Translate the 2D maze array into a 3D scene
+    const unitSize = 5;
+    for (let i = 0; i < mazeSize; i++) {
+        for (let j = 0; j < mazeSize; j++) {
+            if (maze[i][j]) {
+                // If true, create a wall
+                const wallGeometry = new THREE.BoxGeometry(unitSize, unitSize, unitSize);
+                const wallMaterial = new THREE.MeshBasicMaterial({ color: 0x00bfff, wireframe: isWireframe });
+                const wall = new THREE.Mesh(wallGeometry, wallMaterial);
+                wall.position.set(i * unitSize - (mazeSize / 2) * unitSize, unitSize / 2, j * unitSize - (mazeSize / 2) * unitSize);
+                scene.add(wall);
+            }
+        }
+    }
+   generationCount++;
+    document.querySelector('#generationCount').textContent = 'Generation Count: ' + generationCount;
+     
+    // ... (any additional code for camera setup, lighting, etc.)
+}
+        function resetCamera() {
+            camera.position.set(225, 225, 225);
+            controls.update();
+        }
+
+        function solveMaze() {
+            const path = scene.children.filter(object => object.material.color.getHex() === 0x00bfff);
+            path.forEach(segment => segment.material.color.set(0xffff00));
+        }
+
+        function toggleWireframe() {
+            isWireframe = !isWireframe;
+            generateMaze();
+        }
+
+        function exportCanvasToPNG() {
+const canvas = document.querySelector('#canvas');
+
+// Ensure that rendering is complete before capturing
+renderer.render(scene, camera);
+
+// Capture the canvas content as a data URL (PNG format)
+const imgData = canvas.toDataURL('image/png');
+
+// Create a link to download the image
+const link = document.createElement('a');
+link.href = imgData;
+link.download = 'maze.png'; // Set the desired filename
+link.click();
+}
+
+        function exportGLB() {
+            const exporter = new THREE.GLTFExporter();
+
+            exporter.parse(scene, function (gltf) {
+                const glbBlob = new Blob([gltf], { type: 'application/octet-stream' });
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(glbBlob);
+                a.download = 'maze_model.glb';
+                a.click();
+            }, { binary: true });
+        }
+
+        document.querySelector('#generateMazeButton').addEventListener('click', generateMaze);
+        document.querySelector('#resetCameraButton').addEventListener('click', resetCamera);
+        document.querySelector('#solveMazeButton').addEventListener('click', solveMaze);
+        document.querySelector('#toggleWireframeButton').addEventListener('click', toggleWireframe);
+        document.querySelector('#exportButton').addEventListener('click', exportCanvasToPNG);
+
+        document.querySelector('#exportGLBButton').addEventListener('click', exportGLB);
+
+        document.querySelector('#mazeSizeSlider').addEventListener('input', function (event) {
+            a = event.target.value;
+            document.querySelector('#mazeSize').textContent = 'Maze Size: ' + a;
+        });
+
+  // Function definitions (createWallSegment, D1, generateMaze, etc.)
+
+
+
+  let arToolkitSource, arToolkitContext, markerRoot;
+let arEnabled = false;
+
+function initializeAR() {
+  // Setup AR.js toolkit source
+  arToolkitSource = new THREEx.ArToolkitSource({
+    sourceType: 'webcam',
+  });
+
+  arToolkitSource.init(function onReady() {
+    setTimeout(() => {
+      onResize();
+    }, 2000);
+  });
+
+  // Handle resize
+  window.addEventListener('resize', function() {
+    onResize();
+  });
+
+  // Setup AR.js context
+  arToolkitContext = new THREEx.ArToolkitContext({
+    cameraParametersUrl: THREEx.ArToolkitContext.baseURL + '../data/data/camera_para.dat',
+    detectionMode: 'mono',
+  });
+
+  arToolkitContext.init(function onCompleted() {
+    camera.projectionMatrix.copy(arToolkitContext.getProjectionMatrix());
+  });
+
+  // Setup marker root
+  markerRoot = new THREE.Group();
+  scene.add(markerRoot);
+  let markerControls = new THREEx.ArMarkerControls(arToolkitContext, markerRoot, {
+    type: 'pattern',
+    patternUrl: THREEx.ArToolkitContext.baseURL + '../data/data/patt.hiro'
+  });
+}
+
+function onResize() {
+  arToolkitSource.onResizeElement();
+  arToolkitSource.copyElementSizeTo(renderer.domElement);
+  if (arToolkitContext.arController !== null) {
+    arToolkitSource.copyElementSizeTo(arToolkitContext.arController.canvas);
+  }
+}
+
+// Toggle AR mode
+document.querySelector('#toggleARButton').addEventListener('click', function() {
+  arEnabled = !arEnabled;
+  if (arEnabled) {
+    initializeAR();
+  } else {
+    scene.remove(markerRoot); // Remove the marker root to disable AR
+    // Reset camera and renderer as needed for normal 3D view
+  }
+});
+
+function updateAR() {
+  if (arToolkitSource && arToolkitContext && arToolkitSource.ready !== false && arEnabled) {
+    arToolkitContext.update(arToolkitSource.domElement);
+  }
+}
+function animate() {
+  requestAnimationFrame(animate);
+  updateAR(); // Update AR if enabled
+  controls.update();
+  renderer.render(scene, camera);
+}
+animate();
+  // Generate maze on window load
+  window.onload = generateMaze;
+
+  // Event listeners for buttons and sliders
+  document.querySelector('#generateMazeButton').addEventListener('click', generateMaze);
+  document.querySelector('#resetCameraButton').addEventListener('click', resetCamera);
+  document.querySelector('#solveMazeButton').addEventListener('click', solveMaze);
+  document.querySelector('#toggleWireframeButton').addEventListener('click', toggleWireframe);
+  document.querySelector('#exportButton').addEventListener('click', exportCanvasToPNG);
+  document.querySelector('#exportGLBButton').addEventListener('click', exportGLB);
+
+  document.querySelector('#mazeSizeSlider').addEventListener('input', function(event) {
+  a = parseInt(event.target.value); // Convert slider value to integer to ensure proper calculations
+  document.querySelector('#mazeSize').textContent = 'Maze Size: ' + a;
+
+  generationCount++; // Increment generation count each time the slider is adjusted
+  document.querySelector('#generationCount').textContent = 'Generation Count: ' + generationCount;
+
+  generateMaze(); // Regenerate the maze with the new size
+});
+
+</script>
+
+</body>
+  </html>
+  
+  
+

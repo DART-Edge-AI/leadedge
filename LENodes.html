@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mind Map</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f7f7f7;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            box-sizing: border-box;
+        }
+        #toolbar {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-around;
+            padding: 10px;
+            background-color: #fff;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        #toolbar button, #toolbar input, #toolbar img {
+            padding: 10px;
+            margin: 5px;
+            font-size: 14px;
+            background-color: #87CEEB;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        #mind-map-container {
+            position: relative;
+            width: 1200px;
+            height: 800px;
+            border: 1px solid #ccc;
+            margin-left: 80px;
+        }
+        canvas {
+            border: 1px solid #ccc;
+        }
+        .node {
+            position: absolute;
+            padding: 10px;
+            border: 2px solid #000;
+            border-radius: 8px;
+            background-color: #87CEEB;
+            cursor: move;
+            white-space: pre-wrap;
+        }
+        .node[contenteditable="true"] {
+            outline: 2px dashed #000;
+        }
+    </style>
+</head>
+<body>
+    <div id="toolbar">
+        <button onclick="addNode('master')">M</button>
+        <button onclick="addNode('sub')">S</button>
+        <input type="color" id="fontColor" value="#000000" title="Change Font Color">
+        <button onclick="changeFontColor()">F</button>
+        <button onclick="insertImage()">I</button>
+        <button onclick="exportCanvas()">📷</button>
+    </div>
+    <div id="mind-map-container">
+        <canvas id="mind-map-canvas" width="1200" height="800"></canvas>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('mind-map-canvas');
+        const ctx = canvas.getContext('2d');
+        const container = document.getElementById('mind-map-container');
+        let currentNode = null;
+        let offsetX, offsetY;
+
+        function drawCurve(node1, node2) {
+            const rect1 = node1.getBoundingClientRect();
+            const rect2 = node2.getBoundingClientRect();
+
+            const startX = rect1.left + rect1.width / 2 - canvas.offsetLeft;
+            const startY = rect1.top + rect1.height / 2 - canvas.offsetTop;
+            const endX = rect2.left + rect2.width / 2 - canvas.offsetLeft;
+            const endY = rect2.top + rect2.height / 2 - canvas.offsetTop;
+
+            ctx.beginPath();
+            ctx.moveTo(startX, startY);
+            ctx.bezierCurveTo(startX, endY, endX, startY, endX, endY);
+            ctx.strokeStyle = '#000';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        }
+
+        function updateCanvas() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            const nodes = document.querySelectorAll('.node');
+            for (let i = 0; i < nodes.length; i++) {
+                for (let j = i + 1; j < nodes.length; j++) {
+                    drawCurve(nodes[i], nodes[j]);
+                }
+            }
+        }
+
+        function onMouseDown(e) {
+            if (e.target.classList.contains('node')) {
+                currentNode = e.target;
+                offsetX = e.clientX - currentNode.offsetLeft;
+                offsetY = e.clientY - currentNode.offsetTop;
+                document.addEventListener('mousemove', onMouseMove);
+                document.addEventListener('mouseup', onMouseUp);
+            }
+        }
+
+        function onMouseMove(e) {
+            if (currentNode) {
+                currentNode.style.left = `${e.clientX - offsetX}px`;
+                currentNode.style.top = `${e.clientY - offsetY}px`;
+                updateCanvas();
+            }
+        }
+
+        function onMouseUp() {
+            document.removeEventListener('mousemove', onMouseMove);
+            document.removeEventListener('mouseup', onMouseUp);
+            currentNode = null;
+        }
+
+        function addNode(type) {
+            const newNode = document.createElement('div');
+            newNode.classList.add('node');
+            newNode.style.left = `${Math.random() * (container.clientWidth - 100)}px`;
+            newNode.style.top = `${Math.random() * (container.clientHeight - 50)}px`;
+            newNode.innerText = type === 'master' ? 'Master Node' : 'Sub Node';
+            newNode.style.backgroundColor = type === 'master' ? '#FFD700' : '#87CEEB';
+            newNode.setAttribute('contenteditable', 'true');
+            newNode.addEventListener('mousedown', onMouseDown);
+            container.appendChild(newNode);
+            updateCanvas();
+        }
+
+        function changeFontColor() {
+            const color = document.getElementById('fontColor').value;
+            if (currentNode) {
+                currentNode.style.color = color;
+            }
+        }
+
+        function insertImage() {
+            const url = prompt("Enter image URL:");
+            if (url && currentNode) {
+                const img = document.createElement('img');
+                img.src = url;
+                img.style.maxWidth = '100%';
+                img.style.maxHeight = '100%';
+                currentNode.appendChild(img);
+            }
+        }
+
+        function exportCanvas() {
+            const exportCanvas = document.createElement('canvas');
+            const exportCtx = exportCanvas.getContext('2d');
+            exportCanvas.width = canvas.width;
+            exportCanvas.height = canvas.height;
+
+            // Draw connections
+            exportCtx.clearRect(0, 0, exportCanvas.width, exportCanvas.height);
+            const nodes = document.querySelectorAll('.node');
+            for (let i = 0; i < nodes.length; i++) {
+                for (let j = i + 1; j < nodes.length; j++) {
+                    drawCurve(nodes[i], nodes[j]);
+                }
+            }
+
+            // Draw nodes
+            nodes.forEach(node => {
+                const rect = node.getBoundingClientRect();
+                exportCtx.fillStyle = window.getComputedStyle(node).backgroundColor;
+                exportCtx.fillRect(rect.left - canvas.offsetLeft, rect.top - canvas.offsetTop, rect.width, rect.height);
+                exportCtx.strokeStyle = window.getComputedStyle(node).borderColor;
+                exportCtx.lineWidth = parseInt(window.getComputedStyle(node).borderWidth);
+                exportCtx.strokeRect(rect.left - canvas.offsetLeft, rect.top - canvas.offsetTop, rect.width, rect.height);
+                exportCtx.fillStyle = window.getComputedStyle(node).color;
+                exportCtx.font = window.getComputedStyle(node).font;
+                exportCtx.textAlign = 'center';
+                exportCtx.textBaseline = 'middle';
+                exportCtx.fillText(node.innerText, rect.left - canvas.offsetLeft + rect.width / 2, rect.top - canvas.offsetTop + rect.height / 2);
+
+                // Draw images inside nodes
+                node.querySelectorAll('img').forEach(img => {
+                    exportCtx.drawImage(img, rect.left - canvas.offsetLeft, rect.top - canvas.offsetTop, rect.width, rect.height);
+                });
+            });
+
+            const imgURL = exportCanvas.toDataURL('image/png');
+            const link = document.createElement('a');
+            link.href = imgURL;
+            link.download = 'mind-map.png';
+            link.click();
+        }
+
+        document.addEventListener('mousedown', onMouseDown);
+
+        // Make the toolbar draggable
+        const toolbar = document.getElementById('toolbar');
+        toolbar.addEventListener('mousedown', function(e) {
+            let shiftX = e.clientX - toolbar.getBoundingClientRect().left;
+            let shiftY = e.clientY - toolbar.getBoundingClientRect().top;
+
+            function moveAt(pageX, pageY) {
+                toolbar.style.left = pageX - shiftX + 'px';
+                toolbar.style.top = pageY - shiftY + 'px';
+            }
+
+            function onMouseMove(e) {
+                moveAt(e.pageX, e.pageY);
+            }
+
+            document.addEventListener('mousemove', onMouseMove);
+
+            toolbar.onmouseup = function() {
+                document.removeEventListener('mousemove', onMouseMove);
+                toolbar.onmouseup = null;
+            };
+        });
+
+        toolbar.ondragstart = function() {
+            return false;
+        };
+
+        updateCanvas();
+    </script>
+</body>
+</html>

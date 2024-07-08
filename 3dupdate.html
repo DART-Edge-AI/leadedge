@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Lead Edge Maze</title>
+    
+        <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script> <!-- Add GLTFLoader -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/DRACOLoader.js"></script> <!-- Add DRACOLoader for GLTF compression -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/KTX2Loader.js"></script> <!-- Add KTX2Loader for texture compression -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/RGBELoader.js"></script> <!-- Add RGBELoader for environment maps -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/pmrem/PMREMGenerator.js"></script> <!-- Add PMREMGenerator for prefiltered environment maps -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/pmrem/PMREMCubeUVPacker.js"></script> <!-- Add PMREMCubeUVPacker for prefiltered environment maps -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/EffectComposer.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/RenderPass.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/ShaderPass.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/BloomPass.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/exporters/GLTFExporter.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/0.5.0-beta4/html2canvas.min.js"></script>
+<script src="https://jeromeetienne.github.io/AR.js/aframe/build/aframe-ar.js"></script>
+<!-- Include AR.js for Three.js -->
+<script src="https://unpkg.com/ar.js/three/build/ar-nft.min.js"></script>
+<script src="https://unpkg.com/ar.js/three/build/ar.js"></script>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-top: 50px;
+            margin: 0;
+            height: 100vh;
+            background-color: indigo;
+        }
+        canvas {
+            margin-top: 20px;
+        }
+        button {
+            margin: 10px;
+            padding: 10px 20px;
+            background-color: deepskyblue;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+            font-weight: bold;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23);
+        }
+        .developer-comments {
+            font-size: 9px;
+            color: white;
+            text-align: left;
+            max-width: 800px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <img src="https://static.wixstatic.com/media/2451db_cc9e86fb9d3045ecb0861ed65ff9e86d~mv2.png" alt="Lead Edge" style="max-width: 40%; height:auto;">
+    <div class="developer-comments">
+        <h2>Developer Comments</h2>
+        <p>
+            The maze is surgical, just no defined perimeter as well some iterations might not propagate a path at all, but the logic is still carrying out surgically as you will see the further you go with Generation Iterations. The results will account for perimeterless iterations that will have an effect on the path every few iterations.
+        </p>
+        <p>
+            In this logic, the multiple openings are valid because they do come to dead ends when not part of the main path and where two openings on the perimeter are only separated by a segment this would be a solvable path but invalid because they are in view though there still might be a path through the inner maze. Be reminded this is perimeterless logic but does surgically carry out generation logic as you will see in further generation iterations progression.
+        </p>
+        <p>
+            There are no loops/islands of space or wall segments except at potential perimeter iterations. There is surgically only one solvable path as a true maze except if that particular iteration was affected by the perimeterless generation logic. When a maze iteration is a miss, then it only means the required dimensions were larger and the limited allotted size with this will cross-cancel although the generation logic carried out surgically.
+        </p>
+    </div>
+    <div style="display: flex; justify-content: center; gap: 20px; margin-top: 20px;">
+        <button onclick="generateMaze()">Generate Lead Edge Maze</button>
+        <select id="sizeSelect">
+            <option value="10">Small (10)</option>
+            <option value="30">Medium (30)</option>
+            <option value="70">Large (70)</option>
+        </select>
+        <button onclick="exportPNG()">Export as PNG</button>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/examples/js/controls/OrbitControls.js"></script>
+    <script>
+        let scene, camera, renderer, controls, maze, sizeSelect;
+        const unit = 10;
+
+        document.addEventListener("DOMContentLoaded", () => {
+            sizeSelect = document.getElementById('sizeSelect');
+            init();
+            animate();
+        });
+
+        function init() {
+            scene = new THREE.Scene();
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            document.body.appendChild(renderer.domElement);
+
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.25;
+            controls.enableZoom = true;
+
+            camera.position.set(0, 100, 100);
+            controls.update();
+
+            const ambientLight = new THREE.AmbientLight(0x404040); // soft white light
+            scene.add(ambientLight);
+
+            const directionalLight1 = new THREE.DirectionalLight(0xffffff, 1);
+            directionalLight1.position.set(50, 50, 50).normalize();
+            directionalLight1.castShadow = true;
+            scene.add(directionalLight1);
+
+            const directionalLight2 = new THREE.DirectionalLight(0xffffff, 1);
+            directionalLight2.position.set(-50, 50, -50).normalize();
+            directionalLight2.castShadow = true;
+            scene.add(directionalLight2);
+
+            const directionalLight3 = new THREE.DirectionalLight(0xffffff, 1);
+            directionalLight3.position.set(50, -50, 50).normalize();
+            directionalLight3.castShadow = true;
+            scene.add(directionalLight3);
+
+            generateMaze();
+        }
+
+        function generateMaze() {
+            if (maze) scene.remove(maze);
+            maze = new THREE.Group();
+            const size = parseInt(sizeSelect.value);
+            const mazeSize = 875;
+            const unitSize = mazeSize / size;
+
+            let current = { x: 5, y: 5 };
+            let stack = [current];
+            let visited = new Set([posKey(current)]);
+            let lastDirection = null;
+
+            while (stack.length > 0) {
+                let next = getNextStep(current, lastDirection, visited, unitSize);
+                if (next) {
+                    drawWall(current, next, unitSize);
+                    visited.add(posKey(next));
+                    stack.push(next);
+                    lastDirection = direction(current, next);
+                    current = next;
+                } else {
+                    current = stack.pop();
+                    lastDirection = null;
+                }
+            }
+            createOpenings(unitSize);
+            scene.add(maze);
+        }
+
+        function createOpenings(unitSize) {
+            // Create the openings at the start and end
+        }
+
+        function getNextStep(current, lastDirection, visited, unitSize) {
+            let directions = ['up', 'right', 'down', 'left'];
+            if (lastDirection) {
+                directions = directions.filter(dir => dir !== oppositeDirection(lastDirection));
+            }
+            while (directions.length > 0) {
+                let dirIndex = Math.floor(Math.random() * directions.length);
+                let dir = directions[dirIndex];
+                let next = move(current, dir, unitSize);
+                if (!visited.has(posKey(next)) && isInBounds(next, unitSize)) {
+                    return next;
+                }
+                directions.splice(dirIndex, 1);
+            }
+            return null;
+        }
+
+        function move(pos, direction, unitSize) {
+            switch (direction) {
+                case 'up': return { x: pos.x, y: pos.y - unitSize };
+                case 'right': return { x: pos.x + unitSize, y: pos.y };
+                case 'down': return { x: pos.x, y: pos.y + unitSize };
+                case 'left': return { x: pos.x - unitSize, y: pos.y };
+            }
+        }
+
+        function direction(from, to) {
+            if (from.x === to.x) {
+                return (from.y > to.y) ? 'up' : 'down';
+            } else {
+                return (from.x < to.x) ? 'right' : 'left';
+            }
+        }
+
+        function oppositeDirection(dir) {
+            switch (dir) {
+                case 'up': return 'down';
+                case 'right': return 'left';
+                case 'down': return 'up';
+                case 'left': return 'right';
+            }
+        }
+
+        function isInBounds(pos, unitSize) {
+            const mazeSize = 875;
+            return pos.x >= 0 && pos.x < mazeSize && pos.y >= 0 && pos.y < mazeSize;
+        }
+
+        function drawWall(from, to, unitSize) {
+            const geometry = new THREE.BoxGeometry(unitSize, unitSize, unitSize);
+            const material = new THREE.MeshStandardMaterial({ color: 0xffffff });
+            const cube = new THREE.Mesh(geometry, material);
+            cube.position.set((from.x + to.x) / 2 - 437.5, unitSize / 2, (from.y + to.y) / 2 - 437.5);
+            cube.castShadow = true;
+            cube.receiveShadow = true;
+            maze.add(cube);
+        }
+
+        function posKey(pos) {
+            return `${pos.x}:${pos.y}`;
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            renderer.render(scene, camera);
+        }
+
+        function exportPNG() {
+            renderer.render(scene, camera);
+            renderer.domElement.toBlob(function (blob) {
+                const link = document.createElement('a');
+link.href = URL.createObjectURL(blob);
+link.download = 'LeadEdgeMaze.png';
+link.click();
+});
+}
+</script> <
+/body> <
+/html>

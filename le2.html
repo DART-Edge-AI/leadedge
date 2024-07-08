@@ -1,0 +1,204 @@
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Lead Edge Maze</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-top: 50px;
+            margin: 0;
+            height: 100vh;
+            background-color: indigo;
+        }
+        canvas {
+            
+            margin-top: 20px;
+        }
+        button {
+            margin: 10px;
+            padding: 10px 20px;
+            background-color: deepskyblue;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+            font-weight: bold;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23);
+        }
+.developer-comments {
+  font-size: 9px;
+  
+            color: white;
+            text-align: left;
+            max-width: 550px;
+            font-weight: bold; /* Standard weight font */
+        }
+    </style>
+</head>
+<body>
+  
+    <img src="https://static.wixstatic.com/media/2451db_cc9e86fb9d3045ecb0861ed65ff9e86d~mv2.png" alt="Lead Edge" style="max-width: 40%; height:auto;">
+    <br>
+        <img src="https://static.wixstatic.com/media/2451db_4f17959671e243e780f959689a435b86~mv2.png/v1/fill/w_800,h_354,al_c,q_85,usm_0.66_1.00_0.01,enc_auto/Project%20202402202258.png" alt="Lead Edge" style="max-width: 70%; height:auto;">
+            <br>
+    <br>
+        <div class="developer-comments">
+        <h2>Developer Comments | To do: No more and no less than 2 openings, No Islands of space or walls and a wall length of only 1 unit per the only 90° turn(s) restriction.</h2>
+    </div>
+    <br>
+    <canvas id="mazeCanvas" width="600" height="600"></canvas>
+    <br>
+    <br>
+    <button onclick="generateMaze()">Generate Lead Edge Maze</button>
+    <br>
+    <button onclick="exportPNG()">Export as PNG</button>
+
+    <script>
+
+        const canvas = document.getElementById('mazeCanvas');
+        const ctx = canvas.getContext('2d');
+        const mazeSize = 600;
+        const unit = 30;
+        
+        function createOpenings() {
+  // Clear start and end points for the maze
+  // For example, starting at the top-left and ending at the bottom-right
+  ctx.clearRect(0, 0, unit, unit); // Clears a block at the top-left corner
+  ctx.clearRect(mazeSize - unit, mazeSize - unit, unit, unit); // Clears a block at the bottom-right corner
+}
+
+function generateMaze() {
+  ctx.clearRect(0, 0, mazeSize, mazeSize);
+  ctx.fillStyle = 'rgba(255, 255, 255, 0)';
+  ctx.fillRect(unit, unit, mazeSize - 2 * unit, mazeSize - 2 * unit); // Adjust drawing area inward
+
+  let current = { x: unit * 2, y: unit * 2 }; // Adjust starting point
+  let stack = [current];
+  let visited = new Set([posKey(current)]);
+  let lastDirection = null;
+
+  // Generate the maze using the existing logic
+  while (stack.length > 0) {
+    let next = getNextStep(current, lastDirection, visited);
+    if (next) {
+      drawLine(current.x, current.y, next.x, next.y);
+      visited.add(posKey(next));
+      stack.push(next);
+      lastDirection = direction(current, next);
+      current = next;
+    } else {
+      current = stack.pop();
+      lastDirection = null;
+    }
+  }
+
+  // Create openings in the maze
+  createOpenings();
+}
+
+
+        function posKey(pos) {
+            return `${pos.x}:${pos.y}`;
+        }
+
+        function getNextStep(current, lastDirection, visited) {
+            let directions = ['up', 'right', 'down', 'left'];
+            if (lastDirection) {
+                // Bias the random direction based on last direction to prevent immediate backtracking
+                directions = directions.filter(dir => dir !== oppositeDirection(lastDirection));
+            }
+            while (directions.length > 0) {
+                let dirIndex = Math.floor(Math.random() * directions.length);
+                let dir = directions[dirIndex];
+                let next = move(current, dir);
+                if (!visited.has(posKey(next)) && isInBounds(next)) {
+                    return next;
+                }
+                directions.splice(dirIndex, 1); // Remove direction and try another
+            }
+            return null; // No unvisited neighbors
+        }
+
+        function move(pos, direction) {
+            switch (direction) {
+                case 'up': return { x: pos.x, y: pos.y - unit };
+                case 'right': return { x: pos.x + unit, y: pos.y };
+                case 'down': return { x: pos.x, y: pos.y + unit };
+                case 'left': return { x: pos.x - unit, y: pos.y };
+            }
+        }
+
+        function direction(from, to) {
+            if (from.x === to.x) {
+                return (from.y > to.y) ? 'up' : 'down';
+            } else {
+                return (from.x < to.x) ? 'right' : 'left';
+            }
+        }
+
+        function oppositeDirection(dir) {
+            switch (dir) {
+                case 'up': return 'down';
+                case 'right': return 'left';
+                case 'down': return 'up';
+                case 'left': return 'right';
+            }
+        }
+
+        function isInBounds(pos) {
+  // Adjust bounds check to prevent drawing on the perimeter
+  return pos.x > unit && pos.x < mazeSize - unit && pos.y > unit && pos.y < mazeSize - unit;
+}
+
+function drawLine(x1, y1, x2, y2) {
+  // Adjust line drawing to not exceed the maze area
+  const dx = Math.abs(x2 - x1);
+  const dy = Math.abs(y2 - y1);
+  if (dx + dy === unit) { // Ensure line length is 1 unit
+    if (x1 < unit || x2 < unit || y1 < unit || y2 < unit || x1 > mazeSize - unit || x2 > mazeSize - unit || y1 > mazeSize - unit || y2 > mazeSize - unit) {
+      return; // Skip drawing lines on the border
+    }
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.strokeStyle = '#FFF';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+  }
+}
+
+
+
+        function exportPNG() {
+          // Generate a PNG image data URL from the canvas
+          const dataURL = canvas.toDataURL("image/png");
+        
+          // Create an anchor (<a>) element
+          const a = document.createElement('a');
+        
+          // Set the href to the data URL
+          a.href = dataURL;
+        
+          // Set the download attribute to the desired filename
+          a.download = 'LeadEdgeMaze.png';
+        
+          // Append the anchor to the document
+          document.body.appendChild(a);
+        
+          // Trigger the download
+          a.click();
+        
+          // Remove the anchor from the document
+          document.body.removeChild(a);
+        }
+        
+    </script>
+
+</body>
+</html>
+

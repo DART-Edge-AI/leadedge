@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Dynamic 3D Geometry with AR</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
+    <script src="https://unpkg.com/ar.js@aframe/build/aframe-ar.js"></script>
+</head>
+<body>
+    <a-scene embedded arjs='sourceType: webcam; debugUIEnabled: false;'>
+        <a-marker preset="hiro">
+            <a-entity id="dynamic-geometry"></a-entity>
+        </a-marker>
+        <a-entity camera></a-entity>
+    </a-scene>
+
+    <button onclick="addGeometry()">Generate Geometry</button>
+
+    <script>
+        function addGeometry() {
+            // Reference to the entity where we will append the geometry
+            var container = document.getElementById('dynamic-geometry');
+
+            // Create a new box geometry and set its attributes
+            var box = document.createElement('a-box');
+            box.setAttribute('position', '0 0.5 0');
+            box.setAttribute('material', 'color: deepskyblue;');
+            box.setAttribute('rotation', '0 45 45');
+
+            // Append the new geometry to the container
+            container.appendChild(box);
+        }
+    </script>
+</body>
+</html>

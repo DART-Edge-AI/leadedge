@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Canvas Line Drawer</title>
+<style>
+  body { display: flex; flex-direction: column; align-items: center; }
+  canvas { border: 1px solid black; }
+</style>
+</head>
+<body>
+<h2>Draw Lines on Canvas</h2>
+<button id="toggleDirection">Horizontal</button>
+<canvas id="canvas" width="800" height="800"></canvas>
+
+<button id="reproduce">Reproduce</button>
+
+<canvas id="canvasCopy" width="800" height="800"></canvas>
+
+<button id="export">Export Image</button>
+
+<script>
+  const canvas = document.getElementById('canvas');
+  const ctx = canvas.getContext('2d');
+  const copyCanvas = document.getElementById('canvasCopy');
+  const copyCtx = copyCanvas.getContext('2d');
+  let horizontal = true;
+
+  document.getElementById('toggleDirection').addEventListener('click', function() {
+    horizontal = !horizontal;
+    this.textContent = horizontal ? 'Horizontal' : 'Vertical';
+  });
+
+  canvas.addEventListener('click', function(e) {
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    ctx.beginPath();
+    if (horizontal) {
+      ctx.moveTo(x - 25, y); // Half of 50 pixels
+      ctx.lineTo(x + 25, y);
+    } else {
+      ctx.moveTo(x, y - 25);
+      ctx.lineTo(x, y + 25);
+    }
+    ctx.stroke();
+  });
+
+  document.getElementById('reproduce').addEventListener('click', function() {
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    copyCtx.putImageData(imageData, 0, 0);
+  });
+
+  document.getElementById('export').addEventListener('click', function() {
+    const finalCanvas = document.createElement('canvas');
+    finalCanvas.width = 800;
+    finalCanvas.height = 1600;
+    const finalCtx = finalCanvas.getContext('2d');
+
+    finalCtx.drawImage(canvas, 0, 0);
+    finalCtx.drawImage(copyCanvas, 0, 800);
+
+    const dataURL = finalCanvas.toDataURL('image/png');
+    const link = document.createElement('a');
+    link.download = 'canvas_image.png';
+    link.href = dataURL;
+    link.click();
+  });
+</script>
+</body>
+</html>

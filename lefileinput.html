@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Lead Edge Maze</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-top: 50px;
+            margin: 0;
+            height: 100vh;
+            background-color: indigo;
+        }
+        #mazeCanvas {
+            margin-top: 20px;
+        }
+        button {
+            margin: 10px;
+            padding: 10px 20px;
+            background-color: deepskyblue;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+            font-weight: bold;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23);
+        }
+        .developer-comments {
+            font-size: 9px;
+            color: white;
+            text-align: left;
+            max-width: 800px;
+            font-weight: bold;
+        }
+        button, select {
+            margin: 10px;
+            padding: 10px 20px;
+            background-color: deepskyblue;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+            font-weight: bold;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23);
+        }
+        #threejs-canvas {
+            width: 875px;
+            height: 875px;
+        }
+    </style>
+</head>
+<body>
+    <input type="file" id="imageInput" accept="image/png">
+    <canvas id="mazeCanvas" width="875" height="875"></canvas>
+    
+    <div style="display: flex; justify-content: center; gap: 20px; margin-top: 20px;">
+        <button onclick="generateMaze()">Generate Lead Edge Maze</button>
+        <select id="sizeSelect">
+            <option value="10">Small (10)</option>
+            <option value="30">Medium (30)</option>
+            <option value="70">Large (70)</option>
+        </select>
+        <button onclick="exportPNG()">Export as PNG</button>
+        <button onclick="exportGLB()">Export 3D Maze as GLB</button>
+        <button onclick="toggleResolution()">Toggle 4K</button>
+        <button onclick="toggleSphereView()">Toggle Sphere View</button>
+    </div>
+
+    <div id="threejs-canvas"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/three@0.137.5/build/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.137.5/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.137.5/examples/js/exporters/GLTFExporter.js"></script>
+    <script>
+        const canvas = document.getElementById('mazeCanvas');
+        const ctx = canvas.getContext('2d');
+        let unit = 10; // Default to small
+        let mazeSize = 875; // Default resolution
+        let is4K = false; // Track whether 4K resolution is enabled
+        let mazeData = []; // Store maze data for 3D rendering
+        let scene, camera, renderer, controls;
+        let isSphereView = false; // Track whether sphere view is enabled
+        let imageMask = null; // Store image mask
+
+        document.getElementById('imageInput').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    const tempCanvas = document.createElement('canvas');
+                    tempCanvas.width = img.width;
+                    tempCanvas.height = img.height;
+                    const tempCtx = tempCanvas.getContext('2d');
+                    tempCtx.drawImage(img, 0, 0);
+                    imageMask = tempCtx.getImageData(0, 0, img.width, img.height);
+                    generateMaze(); // Generate maze using the new image mask
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        });
+
+        document.getElementById('sizeSelect').addEventListener('change', function() {
+            unit = parseInt(this.value);
+            generateMaze(); // Regenerate the maze when size changes
+        });
+
+        function toggleResolution() {
+            is4K = !is4K;
+            mazeSize = is4K ? 4096 : 875; // Toggle between 4K and default resolution
+            generateMaze(); // Regenerate the maze with the new resolution
+        }
+
+        function toggleSphereView() {
+            isSphereView = !isSphereView;
+            render3DMaze(); // Re-render the maze with the new view
+        }
+
+        function generateMaze() {
+            canvas.width = mazeSize; // Ensure the canvas is set to the correct size
+            canvas.height = mazeSize; // Ensure the canvas is set to the correct size
+            ctx.clearRect(0, 0, mazeSize, mazeSize);
+            ctx.fillStyle = 'rgba(255, 255, 255, 0)';
+            ctx.fillRect(0, 0, mazeSize, mazeSize);
+
+            let current = { x: mazeSize / 2, y: mazeSize / 2 }; // Central starting point
+            let stack = [current];
+            let visited = new Set([posKey(current)]);
+            let lastDirection = null;
+            mazeData = []; // Reset maze data
+
+            while (stack.length > 0) {
+                let next = getNextStep(current, lastDirection, visited);
+                if (next) {
+                    drawLine(current.x, current.y, next.x, next.y);
+                    mazeData.push({ x1: current.x, y1: current.y, x2: next.x, y2: next.y });
+                    visited.add(posKey(next));
+                    stack.push(next);
+                    lastDirection = direction(current, next);
+                    current = next;
+                } else {
+                    current = stack.pop();
+                    lastDirection = null; // Reset direction after backtracking
+                }
+            }
+            createOpenings();
+            render3DMaze();
+        }
+
+        function createOpenings() {
+            ctx.clearRect(0, 0, unit, unit); // Top-left corner
+            ctx.clearRect(mazeSize - unit, mazeSize - unit, unit, unit); // Bottom-right corner
+        }
+
+        function getNextStep(current, lastDirection, visited) {
+            let directions = ['up', 'right', 'down', 'left'];
+            if (lastDirection) {
+                directions = directions.filter(dir => dir !== oppositeDirection(lastDirection));
+            }
+            while (directions.length > 0) {
+                let dirIndex = Math.floor(Math.random() * directions.length);
+                let dir = directions[dirIndex];
+                let next = move(current, dir);
+                if (!visited.has(posKey(next)) && isInBounds(next) && isPath(next)) {
+                    return next;
+                }
+                directions.splice(dirIndex, 1); // Remove direction and try another
+            }
+            return null; // No unvisited neighbors
+        }
+
+        function move(pos, direction) {
+            switch (direction) {
+                case 'up': return { x: pos.x, y: pos.y - unit };
+                case 'right': return { x: pos.x + unit, y: pos.y };
+                case 'down': return { x: pos.x, y: pos.y + unit };
+                case 'left': return { x: pos.x - unit, y: pos.y };
+            }
+        }
+
+        function direction(from, to) {
+            if (from.x === to.x) {
+                return (from.y > to.y) ? 'up' : 'down';
+            } else {
+                return (from.x < to.x) ? 'right' : 'left';
+            }
+        }
+
+        function oppositeDirection(dir) {
+            switch (dir) {
+                case 'up': return 'down';
+                case 'right': return 'left';
+                case 'down': return 'up';
+                case 'left': return 'right';
+            }
+        }
+
+        function isInBounds(pos) {
+            return pos.x >= 0 && pos.x <= mazeSize && pos.y >= 0 && pos.y <= mazeSize;
+        }
+
+        function isPath(pos) {
+            if (!imageMask) return true; // No mask, allow all positions
+            const { width, height, data } = imageMask;
+            const x = Math.floor(pos.x * (width / mazeSize));
+            const y = Math.floor(pos.y * (height / mazeSize));
+            const index = (y * width + x) * 4; // RGBA index
+            const [r, g, b] = [data[index], data[index + 1], data[index + 2]];
+const brightness = (r + g + b) / 3;
+return brightness < 200; // Allow only dark areas (adjust threshold as needed)
+}
+
+function drawLine(x1, y1, x2, y2) {
+  const dx = Math.abs(x2 - x1);
+  const dy = Math.abs(y2 - y1);
+  if (dx + dy === unit) { // Ensure line length is 1 unit
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, x2);
+    ctx.strokeStyle = '#FFF';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+  }
+}
+
+function posKey(pos) {
+  return `${pos.x}:${pos.y}`;
+}
+
+function exportPNG() {
+  const dataURL = canvas.toDataURL("image/png");
+  const a = document.createElement('a');
+  a.href = dataURL;
+  a.download = 'LeadEdgeMaze.png';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}
+
+function render3DMaze() {
+  if (scene) {
+    // Remove the previous objects from the scene
+    while (scene.children.length > 0) {
+      scene.remove(scene.children[0]);
+    }
+  } else {
+    // Initialize Three.js components
+    scene = new THREE.Scene();
+    camera = new THREE.PerspectiveCamera(60, 1, 0.01, 100000);
+    camera.position.set(0, mazeSize, mazeSize); // Adjust the camera position to be above the maze
+    camera.lookAt(0, 0, 0); // Point the camera towards the center of the maze
+    renderer = new THREE.WebGLRenderer({ alpha: true }); // transparent background
+    renderer.setSize(875, 875); // Set renderer size to 875x875 pixels
+    renderer.domElement.id = "threejs-canvas"; // Add ID to the canvas
+    document.getElementById('threejs-canvas').appendChild(renderer.domElement);
+
+    // Add orbit controls
+    controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.25;
+    controls.enableZoom = true;
+
+    // Render loop
+    function animate() {
+      requestAnimationFrame(animate);
+      controls.update();
+      renderer.render(scene, camera);
+    }
+    animate();
+
+    // Handle window resize
+    window.addEventListener('resize', function() {
+      renderer.setSize(875, 875); // Fix size to 875x875 pixels
+      camera.aspect = 1; // Aspect ratio is 1:1 for 875x875 pixels
+      camera.updateProjectionMatrix();
+    });
+  }
+
+  if (isSphereView) {
+    renderMazeOnSphere();
+  } else {
+    renderMazeOnPlane();
+  }
+}
+
+function renderMazeOnPlane() {
+  // Draw the maze as 3D extruded lines (thin boxes)
+  const material = new THREE.MeshBasicMaterial({ color: 0xffffff });
+  mazeData.forEach(segment => {
+    const dx = segment.x2 - segment.x1;
+    const dy = segment.y2 - segment.y1;
+    const length = Math.sqrt(dx * dx + dy * dy);
+    const geometry = new THREE.BoxGeometry(length, 1, 1); // Length, height, width
+    const line = new THREE.Mesh(geometry, material);
+    line.position.set(
+      (segment.x1 + segment.x2) / 2 - mazeSize / 2,
+      (segment.y1 + segment.y2) / 2 - mazeSize / 2,
+      0
+    );
+    if (dx === 0) {
+      line.rotation.z = Math.PI / 2;
+    }
+    scene.add(line);
+  });
+}
+
+function renderMazeOnSphere() {
+  const radius = mazeSize / 2; // Radius of the sphere
+  const material = new THREE.LineBasicMaterial({ color: 0xffffff });
+
+  mazeData.forEach(segment => {
+    const geometry = createNURBSLineGeometry(
+      segment.x1 - mazeSize / 2,
+      segment.y1 - mazeSize / 2,
+      segment.x2 - mazeSize / 2,
+      segment.y2 - mazeSize / 2,
+      radius
+    );
+    const line = new THREE.Line(geometry, material);
+    scene.add(line);
+  });
+}
+
+function createNURBSLineGeometry(x1, y1, x2, y2, radius) {
+  const points = [
+                mapToSphere(x1, y1, radius),
+                mapToSphere(x2, y2, radius)
+            ];
+  const nurbsCurve = new THREE.CatmullRomCurve3(points);
+  const nurbsGeometry = new THREE.BufferGeometry().setFromPoints(nurbsCurve.getPoints(50));
+  return nurbsGeometry;
+}
+
+function mapToSphere(x, y, radius) {
+  const theta = (x / mazeSize) * Math.PI; // Longitude
+  const phi = (y / mazeSize) * 2 * Math.PI; // Latitude
+  const pos = new THREE.Vector3();
+  pos.x = radius * Math.sin(phi) * Math.cos(theta);
+  pos.y = radius * Math.sin(phi) * Math.sin(theta);
+  pos.z = radius * Math.cos(phi);
+  return pos;
+}
+
+function exportGLB() {
+  const exporter = new THREE.GLTFExporter();
+  exporter.parse(scene, function(result) {
+    const blob = new Blob([result], { type: 'application/octet-stream' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = is4K ? 'LeadEdgeMaze3D-4k.glb' : 'LeadEdgeMaze3D.glb';
+    link.click();
+  }, { binary: true });
+}
+
+// Initial maze and 3D maze generation
+generateMaze();
+</script> </body>   </html>

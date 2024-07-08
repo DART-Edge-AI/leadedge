@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DART Edge Proxima Stock Graph</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            color: white;
+            //background-color: #333;
+            margin: 0;
+            padding: 0;
+            text-align: center;
+        }
+        h1, h2 {
+            color: white;
+        }
+        .container {
+            width: 80%;
+            margin: auto;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .left-aligned {
+            text-align: left;
+        }
+        .input-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .input-container label {
+            margin-right: 10px;
+        }
+        .input-container input {
+            margin-right: 20px;
+        }
+        textarea {
+            width: 100%;
+            height: 150px;
+            margin-top: 20px;
+            background: #fff;
+            color: #000;
+        }
+        .output, .code-block {
+            margin-top: 20px;
+            background: #282c34;
+            padding: 20px;
+            border-radius: 5px;
+            color: #61dafb;
+            text-align: left;
+            white-space: pre-wrap;
+        }
+        .slider-container {
+            width: 50%;
+            margin: 20px auto;
+        }
+        .slider {
+            width: 100%;
+        }
+        #chart3d {
+            width: 100%;
+            height: 500px;
+        }
+        .button-container {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+    </style>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>DART Edge Proxima Stock Graph</h1>
+        <p class="left-aligned">
+            - Ticker 1 meets ticker 4 by 2.5 years.<br>
+            - Ticker 2 meets ticker 4 by half of ticker 3 meeting ticker 4 in 5 years.<br>
+            - Ticker 3 meets ticker 4 by both ticker 1 and ticker 2 combined in 5 years.<br>
+            - Ticker 5 is met by ticker 2 plus ticker 3 plus ticker 1 in 5 years.
+            <br>
+            <br>
+            For each choose a Ticker Proportional to your Goal Intentions:
+           
+            <br>
+            A = Whom Should be.
+            <br>
+            B = Whom Causes to be.
+            <br>
+            C = Whom Congruetly or more effectively causes to be.
+            <br>
+            D = Whom you want to influence a Green Environment as well as Whom is Currently Economicly Effective.
+            <br>
+            E = Whom is Currently Economicly Effective as the Backbone.
+        </p>
+        <form id="ticker-form">
+            <div class="input-container">
+                <label for="closing-price-a">Closing Price A:</label>
+                <input type="text" id="closing-price-a" placeholder="0.00000">
+                <label for="ticker-a-input">Enter Ticker A:</label>
+                <input type="text" id="ticker-a-input">
+            </div>
+            <div class="input-container">
+                <label for="closing-price-b">Closing Price B:</label>
+                <input type="text" id="closing-price-b" placeholder="0.00000">
+                <label for="ticker-b-input">Enter Ticker B:</label>
+                <input type="text" id="ticker-b-input">
+            </div>
+            <div class="input-container">
+                <label for="closing-price-c">Closing Price C:</label>
+                <input type="text" id="closing-price-c" placeholder="0.00000">
+                <label for="ticker-c-input">Enter Ticker C:</label>
+                <input type="text" id="ticker-c-input">
+            </div>
+            <div class="input-container">
+                <label for="closing-price-d">Closing Price D:</label>
+                <input type="text" id="closing-price-d" placeholder="0.00000">
+                <label for="ticker-d-input">Enter Ticker D:</label>
+                <input type="text" id="ticker-d-input">
+            </div>
+            <div class="input-container">
+                <label for="closing-price-e">Closing Price E:</label>
+                <input type="text" id="closing-price-e" placeholder="0.00000">
+                <label for="ticker-e-input">Enter Ticker E:</label>
+                <input type="text" id="ticker-e-input">
+            </div>
+        </form>
+        <div class="slider-container">
+            <label for="projection-slider">Projection Period (months): </label>
+            <input type="range" id="projection-slider" class="slider" min="1" max="2000" value="12" oninput="updateSliderValue(this.value)">
+            <span id="slider-value">12</span> months
+        </div>
+        <div class="button-container">
+            <button type="button" onclick="getManualData()">Get Manual Data</button>
+            <button type="button" onclick="getRealTimeData()">Get Real-Time Data</button>
+        </div>
+        <div id="chart3d"></div><br>
+        <div id="ticker-prices"></div><br>
+    </div>
+
+    <script>
+        function updateSliderValue(value) {
+            document.getElementById('slider-value').innerText = value;
+            updateGraph();
+        }
+
+        function getRealTimeData() {
+            const tickerA = document.getElementById("ticker-a-input").value.toUpperCase();
+            const tickerB = document.getElementById("ticker-b-input").value.toUpperCase();
+            const tickerC = document.getElementById("ticker-c-input").value.toUpperCase();
+            const tickerD = document.getElementById("ticker-d-input").value.toUpperCase();
+            const tickerE = document.getElementById("ticker-e-input").value.toUpperCase();
+
+            const urls = [
+                `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${tickerA}&apikey=QBY6DAPYL7LMO7PG`,
+                `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${tickerB}&apikey=QBY6DAPYL7LMO7PG`,
+                `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${tickerC}&apikey=QBY6DAPYL7LMO7PG`,
+                `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${tickerD}&apikey=QBY6DAPYL7LMO7PG`,
+                `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${tickerE}&apikey=QBY6DAPYL7LMO7PG`
+            ];
+
+            // Fetch data for all the tickers
+            Promise.all(urls.map(url => fetch(url)))
+                .then(responses => Promise.all(responses.map(response => response.json())))
+                .then(data => {
+                    const tickerPrices = data.map((item, index) => {
+                        const globalQuote = item["Global Quote"];
+                        if (globalQuote && globalQuote["05. price"]) {
+                            return parseFloat(globalQuote["05. price"]);
+                        } else if (globalQuote && globalQuote["08. previous close"]) {
+                            return parseFloat(globalQuote["08. previous close"]);
+                        } else {
+                            console.error(`Data for ticker ${index + 1} is not available.`);
+                            return null;
+                        }
+                    });
+
+                    if (tickerPrices.some(price => price === null)) {
+                        alert("One or more tickers have invalid data. Please check the ticker symbols and try again.");
+                        return;
+                    }
+
+                    updateGraph(tickerPrices);
+
+                    const tickerPricesHTML = `
+                        <h2>Current Ticker Prices:</h2>
+                        <ul>
+                            <li>${tickerA}: $${tickerPrices[0]}</li>
+                            <li>${tickerB}: $${tickerPrices[1]}</li>
+                            <li>${tickerC}: $${tickerPrices[2]}</li>
+                            <li>${tickerD}: $${tickerPrices[3]}</li>
+                            <li>${tickerE}: $${tickerPrices[4]}</li>
+                        </ul>
+                    `;
+                    document.getElementById("ticker-prices").innerHTML = tickerPricesHTML;
+                })
+                .catch(error => console.error('Error fetching ticker data:', error));
+        }
+
+        function generateDates(timeFrame) {
+            const today = new Date();
+            const dates = [];
+            for (let i = 0; i <= timeFrame * 252; i++) {
+                const date = new Date(today.getTime() + i * 24 * 60 * 60 * 1000);
+                dates.push(date);
+            }
+            return dates;
+        }
+
+        function generateProjection(initialPrice, timeStep, steps) {
+            const prices = [initialPrice];
+            for (let i = 1; i < steps; i++) {
+                prices.push(prices[i - 1] * (1 + (Math.random() - 0.5) * timeStep));
+            }
+            return prices;
+        }
+
+        function plot3DGraph(dates, projections, tickers) {
+            const traces = projections.map((data, index) => ({
+                x: dates,
+                y: Array.from({length: dates.length}, (_, i) => i),
+                z: data,
+                mode: 'lines',
+                type: 'scatter3d',
+                name: tickers[index]
+            }));
+
+            const layout = {
+                title: '3D Projection of Stock Prices',
+                scene: {
+                    xaxis: { title: 'Date' },
+                    yaxis: { title: 'Time Step' },
+                    zaxis: { title: 'Price' }
+                },
+                margin: {
+                    l: 0,
+                    r: 0,
+                    b: 0,
+                    t: 0
+                }
+            };
+
+            Plotly.newPlot('chart3d', traces, layout);
+        }
+
+        function getManualData() {
+            const closingPrices = [
+                parseFloat(document.getElementById("closing-price-a").value) || null,
+                parseFloat(document.getElementById("closing-price-b").value) || null,
+                parseFloat(document.getElementById("closing-price-c").value) || null,
+                parseFloat(document.getElementById("closing-price-d").value) || null,
+                parseFloat(document.getElementById("closing-price-e").value) || null
+            ];
+
+            if (closingPrices.some(price => price === null)) {
+                alert("Please enter valid closing prices for all tickers.");
+                return;
+            }
+
+            updateGraph(closingPrices);
+        }
+
+        function updateGraph(tickerPrices = null) {
+            const timeFrameMonths = parseFloat(document.getElementById("projection-slider").value);
+            const timeFrameYears = timeFrameMonths / 12;
+            const numberOfSteps = timeFrameYears * 252; // Assuming 252 trading days in a year
+            const timeStep = timeFrameYears / numberOfSteps;
+
+            const dates = generateDates(timeFrameYears);
+            const projections = tickerPrices.map(price => generateProjection(price, timeStep, numberOfSteps));
+
+            const tickers = [
+                document.getElementById("ticker-a-input").value.toUpperCase(),
+                document.getElementById("ticker-b-input").value.toUpperCase(),
+                document.getElementById("ticker-c-input").value.toUpperCase(),
+                document.getElementById("ticker-d-input").value.toUpperCase(),
+                document.getElementById("ticker-e-input").value.toUpperCase()
+            ];
+
+            plot3DGraph(dates, projections, tickers);
+        }
+
+        document.getElementById("ticker-form").addEventListener("input", () => updateGraph([
+            parseFloat(document.getElementById("closing-price-a").value) || null,
+            parseFloat(document.getElementById("closing-price-b").value) || null,
+            parseFloat(document.getElementById("closing-price-c").value) || null,
+            parseFloat(document.getElementById("closing-price-d").value) || null,
+            parseFloat(document.getElementById("closing-price-e").value) || null
+        ]));
+    </script>
+</body>
+</html>

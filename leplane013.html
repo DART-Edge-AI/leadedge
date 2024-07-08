@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Lead Edge Maze</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-top: 50px;
+            margin: 0;
+            height: 100vh;
+            background-color: indigo;
+        }
+        #mazeContainer {
+            margin-top: 20px;
+            width: 875px;
+            height: 875px;
+            background: transparent;
+        }
+        button, select {
+            margin: 10px;
+            padding: 10px 20px;
+            background-color: deepskyblue;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+            font-weight: bold;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23);
+        }
+        .developer-comments {
+            font-size: 9px;
+            color: white;
+            text-align: left;
+            max-width: 800px;
+            font-weight: bold;
+        }
+        .mode {
+            margin-top: 100px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        h1 {
+            color: white;
+            font-weight: bold;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <img src="https://raw.githubusercontent.com/DART-Edge-AI/Autumn/main/Project%20202406071648.png" alt="Lead Edge" style="max-width: 15%; height:auto;">
+    <img src="https://raw.githubusercontent.com/DART-Edge-AI/Autumn/main/Project%20202406071648%20(1).png" alt="Lead Edge" style="max-width: 15%; height:auto;">
+  
+    <div class="developer-comments">
+        <h2>Developer Comments:</h2>
+        <p>
+            Surgically refined and with a perimeter. In addition: all the iterations of the maze are surgical except for some that might occur were the opening and exit are close to another on the same perimeter, this is still surgically made because the openings are not in view of one another but it is not surgical on particular iterations where if you do not notice an additional path before the exit such as when the additional path occurs next door to the exit so therefore basically you never played the maze you just went straight from opening to exit therefore it is not surgical but all the other iterations will be surgical. There are no looped wall segments or looped spaces so therefore the iterations are surgical except for those rare iterations I mentioned earlier.
+        </p>
+    </div>
+
+    <div id="mazeContainer"></div>
+    
+    <div style="display: flex; justify-content: center; gap: 20px; margin-top: 20px;">
+        <button onclick="generateMaze()">Generate Lead Edge Maze</button>
+        <select id="sizeSelect">
+            <option value="10">Small (10)</option>
+            <option value="30">Medium (30)</option>
+            <option value="70">Large (70)</option>
+        </select>
+        <button onclick="exportPNG()">Export as PNG</button>
+        <button onclick="exportGLB()">Export as GLB</button>
+        <button onclick="toggleResolution()">Toggle 4K</button>
+    </div>
+    <div class="mode">
+        <img src="https://static.wixstatic.com/media/2451db_2c11e5d3494a45548d0f41afcb138126~mv2.png" alt="Lead Edge" style="max-width: 15%; height:auto;">
+        <div>
+            <h1>3D mode will be right back.</h1>
+        </div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/exporters/GLTFExporter.js"></script>
+    <script>
+        let unit = 10; // Default to small
+        let mazeSize = 875; // Default resolution
+        let is4K = false; // Track whether 4K resolution is enabled
+        let mazeData = []; // Store maze data for 3D rendering
+        let scene, camera, renderer, controls;
+
+        document.getElementById('sizeSelect').addEventListener('change', function() {
+            unit = parseInt(this.value);
+            generateMaze(); // Regenerate the maze when size changes
+        });
+
+        function toggleResolution() {
+            is4K = !is4K;
+            mazeSize = is4K ? 4096 : 875; // Toggle between 4K and default resolution
+            generateMaze(); // Regenerate the maze with the new resolution
+        }
+
+        function generateMaze() {
+            const mazeWidth = Math.floor(mazeSize / unit);
+            const mazeHeight = Math.floor(mazeSize / unit);
+            const grid = createGrid(mazeWidth, mazeHeight);
+            const { entry, exit } = createPath(grid, mazeWidth, mazeHeight);
+
+            mazeData = grid;
+            initialize3DScene();
+            drawGrid3D(grid, mazeWidth, mazeHeight, entry, exit);
+        }
+
+        function createGrid(width, height) {
+            const grid = [];
+            for (let y = 0; y < height; y++) {
+                const row = [];
+                for (let x = 0; x < width; x++) {
+                    row.push({
+                        top: true,
+                        right: true,
+                        bottom: true,
+                        left: true
+                    });
+                }
+                grid.push(row);
+            }
+            return grid;
+        }
+
+        function createPath(grid, width, height) {
+            const stack = [];
+            const entry = getRandomPerimeterCell(width, height);
+            let exit = getRandomPerimeterCell(width, height, entry);
+            let current = entry;
+            const visited = new Set([`${current.x},${current.y}`]);
+
+            while (stack.length > 0 || (current && (current.x !== exit.x || current.y !== exit.y))) {
+                const neighbors = getUnvisitedNeighbors(current, visited, width, height);
+
+                if (neighbors.length > 0) {
+                    const next = neighbors[Math.floor(Math.random() * neighbors.length)];
+                    if (next) {
+                        removeWall(grid, current, next);
+                        stack.push(current);
+                        visited.add(`${next.x},${next.y}`);
+                        current = next;
+                    } else {
+                        console.error('No valid neighbors found.');
+                    }
+                } else {
+                    current = stack.pop();
+                    if (!current) break;  // Additional check to ensure current is defined
+                }
+            }
+
+            // Ensure openings are not next to each other and there is a path through the maze
+            if (Math.abs(entry.x - exit.x) + Math.abs(entry.y - exit.y) < 2) {
+                const intermediateCell = {
+                    x: Math.min(entry.x, exit.x) + 1,
+                    y: Math.min(entry.y, exit.y) + 1
+                };
+                grid[intermediateCell.y][intermediateCell.x].left = false;
+                grid[intermediateCell.y][intermediateCell.x - 1].right = false;
+            }
+
+            // Ensure an additional path is present if the entry and exit are close together
+            if (Math.abs(entry.x - exit.x) + Math.abs(entry.y - exit.y) < 2) {
+                let additionalPathCreated = false;
+                while (!additionalPathCreated) {
+                    const pathCell = getRandomPerimeterCell(width, height);
+                    if (pathCell.x !== entry.x || pathCell.y !== entry.y) {
+                        const neighbors = getUnvisitedNeighbors(pathCell, visited, width, height);
+                        if (neighbors.length > 0) {
+                            const next = neighbors[Math.floor(Math.random() * neighbors.length)];
+                            removeWall(grid, pathCell, next);
+                            additionalPathCreated = true;
+                        }
+                    }
+                }
+            }
+
+            return { entry, exit };
+        }
+
+        function getRandomPerimeterCell(width, height, excludeCell = null) {
+            let cell;
+            do {
+                const side = Math.floor(Math.random() * 4);
+                switch (side) {
+                    case 0: cell = { x: Math.floor(Math.random() * width), y: 0 }; break; // Top
+                    case 1: cell = { x: width - 1, y: Math.floor(Math.random() * height) }; break; // Right
+                    case 2: cell = { x: Math.floor(Math.random() * width), y: height - 1 }; break; // Bottom
+                    case 3: cell = { x: 0, y: Math.floor(Math.random() * height) }; break; // Left
+                }
+            } while (excludeCell && cell.x === excludeCell.x && cell.y === excludeCell.y);
+            return cell;
+        }
+
+        function getUnvisitedNeighbors(cell, visited, width, height) {
+            const neighbors = [];
+            if (!cell) return neighbors;  // Additional check to ensure cell is defined
+
+            const { x, y } = cell;
+            if (x > 0 && !visited.has(`${x - 1},${y}`)) neighbors.push({ x: x - 1, y });
+            if (x < width - 1 && !visited.has(`${x + 1},${y}`)) neighbors.push({ x: x + 1, y });
+            if (y > 0 && !visited.has(`${x},${y - 1}`)) neighbors.push({ x, y: y - 1 });
+            if (y < height - 1 && !visited.has(`${x},${y + 1}`)) neighbors.push({ x, y: y + 1 });
+
+            return neighbors;
+        }
+
+        function removeWall(grid, current, next) {
+            if (current.x === next.x) {
+                if (current.y > next.y) {
+                    grid[current.y][current.x].top = false;
+                    grid[next.y][next.x].bottom = false;
+                } else {
+                    grid[current.y][current.x].bottom = false;
+                    grid[next.y][next.x].top = false;
+                }
+            } else {
+                if (current.x > next.x) {
+                    grid[current.y][current.x].left = false;
+                    grid[next.y][next.x].right = false;
+                } else {
+                    grid[current.y][current.x].right = false;
+                    grid[next.y][next.x].left = false;
+                }
+            }
+        }
+
+        function initialize3DScene() {
+            scene = new THREE.Scene();
+            camera = new THREE.PerspectiveCamera(75, mazeSize / mazeSize, 0.01, 10000);
+            camera.position.set(0, 0, 600);  // Centering the camera on the maze
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setSize(mazeSize, mazeSize); // Set the canvas size
+            document.getElementById('mazeContainer').innerHTML = ''; // Clear any existing canvas
+            document.getElementById('mazeContainer').appendChild(renderer.domElement);
+
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableZoom = true;
+
+            scene.background = null; // Transparent background
+        }
+
+        function drawGrid3D(grid, width, height, entry, exit) {
+            const cellSize = mazeSize / Math.max(width, height);
+            const material = new THREE.LineBasicMaterial({ color: 0xffffff });
+
+            // Draw maze walls
+            for (let y = 0; y < height; y++) {
+                for (let x = 0; x < width; x++) {
+                    const cell = grid[y][x];
+                    const xPos = x * cellSize - mazeSize / 2;
+                    const yPos = y * cellSize - mazeSize / 2;
+
+                    if (cell.top) {
+                        const points = [];
+                        points.push(new THREE.Vector3(xPos, yPos, 0));
+                        points.push(new THREE.Vector3(xPos + cellSize, yPos, 0));
+                        const geometry = new THREE.BufferGeometry().setFromPoints(points);
+                        const line = new THREE.Line(geometry, material);
+                        scene.add(line);
+                    }
+                    if (cell.right) {
+                        const points = [];
+                        points.push(new THREE.Vector3(xPos + cellSize, yPos, 0));
+                        points.push(new THREE.Vector3(xPos + cellSize, yPos + cellSize, 0));
+                        const geometry = new THREE.BufferGeometry().setFromPoints(points);
+                        const line = new THREE.Line(geometry, material);
+                        scene.add(line);
+                    }
+                    if (cell.bottom) {
+                        const points = [];
+                        points.push(new THREE.Vector3(xPos, yPos + cellSize, 0));
+                        points.push(new THREE.Vector3(xPos + cellSize, yPos + cellSize, 0));
+                        const geometry = new THREE.BufferGeometry().setFromPoints(points);
+                        const line = new THREE.Line(geometry, material);
+                        scene.add(line);
+                    }
+                    if (cell.left) {
+                        const points = [];
+                        points.push(new THREE.Vector3(xPos, yPos, 0));
+                        points.push(new THREE.Vector3(xPos, yPos + cellSize, 0));
+                        const geometry = new THREE.BufferGeometry().setFromPoints(points);
+                        const line = new THREE.Line(geometry, material);
+                        scene.add(line);
+                    }
+                }
+            }
+
+            animate();
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            renderer.render(scene, camera);
+        }
+
+        function exportPNG() {
+            renderer.render(scene, camera);
+            renderer.domElement.toBlob(function(blob) {
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = 'LeadEdgeMaze.png';
+                link.click();
+            });
+        }
+
+        function exportGLB() {
+            const exporter = new THREE.GLTFExporter();
+            exporter.parse(scene, function(result) {
+                const blob = new Blob([JSON.stringify(result)], { type: 'application/octet-stream' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = 'LeadEdgeMaze.glb';
+                link.click();
+            });
+        }
+
+        // Initial maze generation
+        generateMaze();
+    </script>
+</body>
+</html>

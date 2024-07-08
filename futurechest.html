@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aurora Script Image Generator</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+            font-family: Arial, sans-serif;
+        }
+        canvas {
+            border: 1px solid #000;
+        }
+        button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas" width="800" height="600"></canvas>
+    <button id="generateButton">Generate Image</button>
+    <button id="saveButton">Save as JPG</button>
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+
+        const themes = [
+            { background: '#ffcccc', line: '#ff0000', chest: '#800000' },
+            { background: '#ccffcc', line: '#00ff00', chest: '#008000' },
+            { background: '#ccccff', line: '#0000ff', chest: '#000080' },
+            { background: '#ffffcc', line: '#ffff00', chest: '#808000' },
+        ];
+
+        function getRandomTheme() {
+            return themes[Math.floor(Math.random() * themes.length)];
+        }
+
+        function drawCutWithChest() {
+            const theme = getRandomTheme();
+            ctx.fillStyle = theme.background;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ctx.strokeStyle = theme.line;
+            ctx.lineWidth = 5;
+            ctx.beginPath();
+            ctx.moveTo(100, 100);
+            ctx.lineTo(700, 500);
+            ctx.stroke();
+
+            const chestPosition = { x: 400, y: 300 };
+
+            ctx.fillStyle = theme.chest;
+            ctx.fillRect(chestPosition.x - 25, chestPosition.y - 25, 50, 50);
+            ctx.strokeRect(chestPosition.x - 25, chestPosition.y - 25, 50, 50);
+        }
+
+        document.getElementById('generateButton').addEventListener('click', drawCutWithChest);
+
+        document.getElementById('saveButton').addEventListener('click', () => {
+            const link = document.createElement('a');
+            link.download = 'generated_image.jpg';
+            link.href = canvas.toDataURL('image/jpeg');
+            link.click();
+        });
+
+        // Generate the first image on load
+        drawCutWithChest();
+    </script>
+</body>
+</html>

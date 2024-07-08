@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Lead Edge</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script> <!-- Add GLTFLoader -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/DRACOLoader.js"></script> <!-- Add DRACOLoader for GLTF compression -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/KTX2Loader.js"></script> <!-- Add KTX2Loader for texture compression -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/RGBELoader.js"></script> <!-- Add RGBELoader for environment maps -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/pmrem/PMREMGenerator.js"></script> <!-- Add PMREMGenerator for prefiltered environment maps -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/pmrem/PMREMCubeUVPacker.js"></script> <!-- Add PMREMCubeUVPacker for prefiltered environment maps -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/EffectComposer.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/RenderPass.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/ShaderPass.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/BloomPass.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/exporters/GLTFExporter.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/0.5.0-beta4/html2canvas.min.js"></script>
+
+
+    <style>
+
+        
+        
+        body {
+              //  background-image: url(leadedge2.jpg);
+           //   background-size: cover;
+         //     background-repeat: no-repeat;
+       //       background-attachment: fixed;
+  //  z-index: -1;
+//    background-position: center center;
+            padding-top: 50px;
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            //justify-content: center;
+            align-items: center;
+            flex-direction: column;
+           // background-color: indigo;  
+     }
+        #loading {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #000;
+            color: #fff;
+            font-size: 24px;
+        }
+        #container {
+            margin-top: 50px;
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            height: 100%;
+            width: 100%;
+        }
+
+        #title {
+            color: white;
+            text-align: center;
+        }
+
+        #title h1 {
+            font-weight: bold;
+        }
+
+        canvas {
+            display: block;
+        }
+
+        #button-container {
+            display: flex;
+            justify-content: space-evenly;
+            margin-bottom: 20px;
+        }
+
+        button {
+            margin: 0 10px;
+            padding: 7px;
+            background-color: deepskyblue;
+            color: #fff;
+            font-size: 18px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.3s;
+        }
+
+        h2 {
+            color: white;
+            font-weight: bold;
+        }
+
+        h3 {
+            color: white;
+            font-weight: bold;
+        }
+
+        a {
+            text-decoration: underline;
+            text-decoration-color: deepskyblue;
+        }
+
+        #mazeSizeSlider {
+            display: block;
+            margin: 20px auto;
+            justify-content: center;
+            align-content: center;
+            width: 300px;
+        }
+
+        #controls {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 25px;
+        }
+
+        #mazeSize {
+            margin-left: 10px;
+            color: white;
+            font-weight: bold;
+        }
+
+        #generationCount {
+            margin-left: 10px;
+            color: white;
+            font-weight: bold;
+        }
+               .mainlogo {
+              display: flex;
+              flex-direction: column;
+              justify-content: center;
+              align-items: center;
+              
+              
+          }
+.logo5 {
+    width: 400px;
+    height: 400px;
+}
+
+    </style>
+</head>
+<body>
+  <div>
+        <div class="mainlogo">
+<a href="https://aist.earth/" target="_blank"><img src="https://static.wixstatic.com/media/2451db_cc9e86fb9d3045ecb0861ed65ff9e86d~mv2.png"  alt="Logo5" class="logo5"></a>
+
+  </div>
+
+    <div id="title" class="LeadEdgeHeader">
+        <h1>Lead Edge Algorithm <br><h3>(Sw)+(Sw^n)+(((b+b)*(a^2))/2)=r</h3></h1>
+        <h2>(A Maze Builder In Development) <div>
+          <label2 class="lea">
+            <a href="https://github.com/DART-Edge-AI/Autumn/blob/main/Lead%20Edge%20Algorithm%20for%20Ash%20Tree%20Reflex.pdf" target="_blank">Access Documentation</a>
+        </div></h2>
+    </div>
+    <div id="controls">
+        <input id="mazeSizeSlider" type="range" min="10" max="200" value="50" class="slider">
+        <div id="mazeSize">Maze Size: 50</div>
+        <div id="generationCount">Generation Count: 0</div>
+        <br>
+        <br>
+        <div id="button-container">
+            <button id="generateMazeButton">Generate New Maze</button>
+            <button id="resetCameraButton">Reset Camera</button>
+            <button id="solveMazeButton">Solve Maze</button>
+            <button id="toggleWireframeButton">Toggle Wireframe</button>
+       <button id="exportButton">Export Maze as PNG</button>
+
+            <button id="exportGLBButton">Export GLB</button>
+        </div>
+    </div>
+
+    <div id="container">
+        <canvas id="canvas" width="875" height="875"></canvas>
+    </div>
+</div>
+    <script>
+        
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        generateMaze();
+    </script>
+</body>
+  </html>
+  
