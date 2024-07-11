@@ -11,7 +11,7 @@
             padding-top: 50px;
             margin: 0;
             height: 100vh;
-           // background-color: indigo;
+            //background-color: indigo;
         }
         #mazeCanvas {
             margin-top: 20px;
@@ -54,8 +54,8 @@
     </style>
 </head>
 <body>
-    <img src="https://raw.githubusercontent.com/DART-Edge-AI/Autumn/main/Project%20202406071648.png" alt="Lead Edge" style="max-width: 15%; height:auto;">
-    <img src="https://raw.githubusercontent.com/DART-Edge-AI/Autumn/main/Project%20202406071648%20(1).png" alt="Lead Edge" style="max-width: 15%; height:auto;">
+    <img src="https://raw.githubusercontent.com/DART-Edge-AI/Autumn/main/DARTMeadowLE.png" alt="Lead Edge" style="max-width: 15%; height:auto;">
+    <img src="https://raw.githubusercontent.com/DART-Edge-AI/Autumn/main/LeadEdge.png" alt="Lead Edge" style="max-width: 15%; height:auto;">
   
     <div class="developer-comments">
         <h2>Developer Comments:</h2>
@@ -71,7 +71,7 @@
         <button onclick="generateMaze()">Generate Lead Edge Maze</button>
         <select id="sizeSelect">
             <option value="10">Small (10)</option>
-            <option value="30">Medium (30)</option>
+            <option value="30" selected>Medium (30)</option>
             <option value="70">Large (70)</option>
         </select>
         <button onclick="exportPNG()">Export as PNG</button>
@@ -88,7 +88,7 @@
     <script>
         const canvas = document.getElementById('mazeCanvas');
         const ctx = canvas.getContext('2d');
-        let unit = 10; // Default to small
+        let unit = 30; // Default to small
         let mazeSize = 875; // Default resolution
         let is4K = false; // Track whether 4K resolution is enabled
         let mazeData = []; // Store maze data for 3D rendering
