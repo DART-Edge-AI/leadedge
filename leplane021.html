@@ -11,11 +11,13 @@
             padding-top: 50px;
             margin: 0;
             height: 100vh;
-            //background-color: indigo;
+            background-color: indigo;
         }
+
         #mazeCanvas {
             margin-top: 20px;
         }
+
         button, select {
             margin: 10px;
             padding: 10px 20px;
@@ -27,6 +29,7 @@
             font-weight: bold;
             box-shadow: 0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23);
         }
+
         .developer-comments {
             font-size: 9px;
             color: white;
@@ -34,17 +37,20 @@
             max-width: 800px;
             font-weight: bold;
         }
+
         h1 {
             color: white;
             font-weight: bold;
             font-size: 12px;
         }
+
         .mode {
-          margin-top: 100px;
-          display: flex;
-          justify-content: center;
-          align-items: center;
+            margin-top: 100px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
+
         .content-container {
             display: flex;
             justify-content: center;
@@ -54,9 +60,9 @@
     </style>
 </head>
 <body>
-    <img src="https://raw.githubusercontent.com/DART-Edge-AI/Autumn/main/DARTMeadowLE.png" alt="Lead Edge" style="max-width: 15%; height:auto;">
+    <img src="https://static.wixstatic.com/media/2451db_0b85c18204104c0fa3102cc5e7cb3577~mv2.png" alt="Lead Edge" style="max-width: 15%; height:auto;">
     <img src="https://raw.githubusercontent.com/DART-Edge-AI/Autumn/main/LeadEdge.png" alt="Lead Edge" style="max-width: 15%; height:auto;">
-  
+
     <div class="developer-comments">
         <h2>Developer Comments:</h2>
         <p>
@@ -66,7 +72,7 @@
     </div>
 
     <canvas id="mazeCanvas" width="875" height="875"></canvas>
-    
+
     <div class="content-container">
         <button onclick="generateMaze()">Generate Lead Edge Maze</button>
         <select id="sizeSelect">
@@ -94,7 +100,7 @@
         let mazeData = []; // Store maze data for 3D rendering
         let entry, exit, scene, camera, renderer, controls;
 
-        document.getElementById('sizeSelect').addEventListener('change', function() {
+        document.getElementById('sizeSelect').addEventListener('change', function () {
             unit = parseInt(this.value);
             generateMaze(); // Regenerate the maze when size changes
         });
@@ -364,7 +370,7 @@
                 animate();
 
                 // Handle window resize
-                window.addEventListener('resize', function() {
+                window.addEventListener('resize', function () {
                     renderer.setSize(875, 875); // Fix size to 875x875 pixels
                     camera.aspect = 1; // Aspect ratio is 1:1 for 875x875 pixels
                     camera.updateProjectionMatrix();
@@ -443,7 +449,7 @@
                 const center = boundingBox.getCenter(new THREE.Vector3());
                 if (
                     (Math.abs(center.x - (entry.x * unit - mazeSize / 2)) < unit && Math.abs(center.y - (entry.y * unit - mazeSize / 2)) < unit) ||
-              (Math.abs(center.x - (exit.x * unit - mazeSize / 2)) < unit && Math.abs(center.y - (exit.y * unit - mazeSize / 2)) < unit)
+                    (Math.abs(center.x - (exit.x * unit - mazeSize / 2)) < unit && Math.abs(center.y - (exit.y * unit - mazeSize / 2)) < unit)
                 ) {
                     scene.remove(segment);
                 }
@@ -466,5 +472,5 @@
         // Initial maze generation
         generateMaze();
     </script>
-</body> 
+</body>
 </html>
