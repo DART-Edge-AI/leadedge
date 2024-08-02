@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lead Edge Cryptography</title>
+</head>
+<body>
+    <h1>Lead Edge Cryptography</h1>
+
+    <h2>Encryption</h2>
+    <label for="message">Message:</label>
+    <input type="text" id="message" placeholder="Enter your message">
+    <button onclick="encryptMessage()">Encrypt</button>
+
+    <h3>Encrypted Data</h3>
+    <p id="encryptedMessage"></p>
+    <p><strong>Private Key:</strong> <span id="privateKey"></span></p>
+    <p><strong>Public Key:</strong> <span id="publicKey"></span></p>
+
+    <h2>Decryption</h2>
+    <label for="publicKeyInput">Public Key:</label>
+    <input type="text" id="publicKeyInput" placeholder="Enter the public key">
+    <button onclick="decryptMessage()">Decrypt</button>
+
+    <h3>Decrypted Message</h3>
+    <p id="decryptedMessage"></p>
+
+    <script>
+        let privateKey, publicKey, encryptedMessage;
+
+        function encryptMessage() {
+            const message = document.getElementById('message').value;
+            const mid = 3; // Example maze interchange dimension
+            const cid = 2; // Example content interchange dimension
+
+            // Simple encryption example using base64 (replace with Lead Edge algorithm)
+            encryptedMessage = btoa(message);
+            privateKey = `Ep = ${Math.sqrt(encryptedMessage.length ** (mid / cid - 1))}`;
+            publicKey = `Epb = ${Math.sqrt(encryptedMessage.length ** (mid / cid - 1)) + 1}`;
+
+            document.getElementById('encryptedMessage').textContent = encryptedMessage;
+            document.getElementById('privateKey').textContent = privateKey;
+            document.getElementById('publicKey').textContent = publicKey;
+        }
+
+        function decryptMessage() {
+            const publicKeyInput = document.getElementById('publicKeyInput').value;
+            const mid = 3; // Example maze interchange dimension
+            const cid = 2; // Example content interchange dimension
+
+            // Validate public key
+            const expectedPublicKey = `Epb = ${Math.sqrt(encryptedMessage.length ** (mid / cid - 1)) + 1}`;
+            if (publicKeyInput === expectedPublicKey) {
+                const decryptedMessage = atob(encryptedMessage); // Simple decryption using base64
+                document.getElementById('decryptedMessage').textContent = decryptedMessage;
+            } else {
+                document.getElementById('decryptedMessage').textContent = 'Invalid Public Key';
+            }
+        }
+    </script>
+</body>
+</html>

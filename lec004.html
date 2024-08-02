@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lead Edge Cryptography Prototype</title>
+    <style>
+        body {
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            flex-direction: column;
+          //  background-color: black;
+            background-image: url('k.png');
+    background-size: cover; /* Ensures the image covers the entire background */
+    
+    background-repeat: no-repeat; /* Prevents the image from repeating */
+   
+    background-position: center; /* Centers the image */
+
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            max-width: 875px;
+            padding: 20px;
+           // background: rgba(255, 20, 147, 0.3); /* Neon pink transparent background */
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .form-group {
+            margin-bottom: 15px;
+            width: 100%;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        input[type="text"], textarea {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+            border-radius: 5px;
+            border: none;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .output {
+            width: 875px;
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            background-color: #333;
+            border-radius: 5px;
+            word-wrap: break-word;
+            max-height: 200px; /* Set a maximum height */
+            overflow-y: auto; /* Make the container scrollable */
+        }
+        #mazeCanvas {
+            display: block;
+            margin: 50px auto;
+            border: 1px solid #ddd;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Lead Edge Cryptography (In Development)</h1>
+        <button onclick="generateMaze()">Generate Lead Edge Maze</button>
+        <canvas id="mazeCanvas" width="875" height="875"></canvas>
+        <div class="form-group">
+            <label for="message">Message to Encrypt</label>
+            <textarea id="message" rows="4"></textarea>
+        </div>
+        <div class="form-group">
+            <button onclick="encryptMessage()">Encrypt Message</button>
+        </div>
+        <div class="output" id="encryption-output"></div>
+        <br>
+        <div class="form-group">
+            <label for="publicKey">Public Key</label>
+            <input type="text" id="publicKey">
+        </div>
+        <div class="form-group">
+            <button onclick="decryptMessage()">Decrypt Message</button>
+        </div>
+        <div class="output" id="decryption-output"></div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('mazeCanvas');
+        const ctx = canvas.getContext('2d');
+        let mazeSegments = [];
+        const unitSize = 30; // Default unit size
+
+        function generateMaze() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear the canvas
+            resetForms(); // Reset the forms below
+
+            const mazeWidth = Math.floor(canvas.width / unitSize);
+            const mazeHeight = Math.floor(canvas.height / unitSize);
+            const grid = createGrid(mazeWidth, mazeHeight);
+            const { entry, exit } = createPath(grid, mazeWidth, mazeHeight);
+            mazeSegments = extractMazeSegments(grid, mazeWidth, mazeHeight);
+            drawGrid(grid, mazeWidth, mazeHeight, entry, exit);
+        }
+
+        function createGrid(width, height) {
+            const grid = [];
+            for (let y = 0; y < height; y++) {
+                const row = [];
+                for (let x = 0; x < width; x++) {
+                    row.push({
+                        top: true,
+                        right: true,
+                        bottom: true,
+                        left: true
+                    });
+                }
+                grid.push(row);
+            }
+            return grid;
+        }
+
+        function createPath(grid, width, height) {
+            const stack = [];
+            const entry = { x: 0, y: Math.floor(Math.random() * height) };
+            const exit = { x: width - 1, y: Math.floor(Math.random() * height) };
+            let current = entry;
+            const visited = new Set([`${current.x},${current.y}`]);
+
+            while (stack.length > 0 || (current && (current.x !== exit.x || current.y !== exit.y))) {
+                const neighbors = getUnvisitedNeighbors(current, visited, width, height);
+
+                if (neighbors.length > 0) {
+                    const next = neighbors[Math.floor(Math.random() * neighbors.length)];
+                    if (next) {
+                        removeWall(grid, current, next);
+                        stack.push(current);
+                        visited.add(`${next.x},${next.y}`);
+                        current = next;
+                    } else {
+                        console.error('No valid neighbors found.');
+                    }
+                } else {
+                    current = stack.pop();
+                    if (!current) break;
+                }
+            }
+
+            return { entry, exit };
+        }
+
+        function getUnvisitedNeighbors(cell, visited, width, height) {
+            const neighbors = [];
+            const { x, y } = cell;
+            if (x > 0 && !visited.has(`${x - 1},${y}`)) neighbors.push({ x: x - 1, y });
+            if (x < width - 1 && !visited.has(`${x + 1},${y}`)) neighbors.push({ x: x + 1, y });
+            if (y > 0 && !visited.has(`${x},${y - 1}`)) neighbors.push({ x, y: y - 1 });
+            if (y < height - 1 && !visited.has(`${x},${y + 1}`)) neighbors.push({ x, y: y + 1 });
+
+            return neighbors;
+        }
+
+        function removeWall(grid, current, next) {
+            if (current.x === next.x) {
+                if (current.y > next.y) {
+                    grid[current.y][current.x].top = false;
+                    grid[next.y][next.x].bottom = false;
+                } else {
+                    grid[current.y][current.x].bottom = false;
+                    grid[next.y][next.x].top = false;
+                }
+            } else {
+                if (current.x > next.x) {
+                    grid[current.y][current.x].left = false;
+                    grid[next.y][next.x].right = false;
+                } else {
+                    grid[current.y][current.x].right = false;
+                    grid[next.y][next.x].left = false;
+                }
+            }
+        }
+
+        function drawGrid(grid, width, height, entry, exit) {
+            const cellSize = canvas.width / Math.max(width, height);
+
+            ctx.strokeStyle = '#FFF';
+            ctx.lineWidth = 2;
+
+            for (let y = 0; y < height; y++) {
+                for (let x = 0; x < width; x++) {
+                    const cell = grid[y][x];
+                    const xPos = x * cellSize;
+                    const yPos = y * cellSize;
+
+                    if (cell.top) {
+                        ctx.beginPath();
+                        ctx.moveTo(xPos, yPos);
+                        ctx.lineTo(xPos + cellSize, yPos);
+                        ctx.stroke();
+                    }
+                    if (cell.right) {
+                        ctx.beginPath();
+                        ctx.moveTo(xPos + cellSize, yPos);
+                        ctx.lineTo(xPos + cellSize, yPos + cellSize);
+                        ctx.stroke();
+                    }
+                    if (cell.bottom) {
+                        ctx.beginPath();
+                        ctx.moveTo(xPos, yPos + cellSize);
+                        ctx.lineTo(xPos + cellSize, yPos + cellSize);
+                        ctx.stroke();
+                    }
+                    if (cell.left) {
+                        ctx.beginPath();
+                        ctx.moveTo(xPos, yPos);
+                        ctx.lineTo(xPos, yPos + cellSize);
+                        ctx.stroke();
+                    }
+                }
+            }
+
+            // Draw entry and exit points
+            ctx.clearRect(entry.x * cellSize, entry.y * cellSize, cellSize, cellSize);
+            ctx.clearRect(exit.x * cellSize, exit.y * cellSize, cellSize, cellSize);
+
+            // Draw the blue border
+            ctx.strokeStyle = 'blue';
+            ctx.lineWidth = 4;
+            ctx.strokeRect(0, 0, canvas.width, canvas.height);
+
+            // Create single-unit openings in the blue perimeter for entry and exit
+            ctx.clearRect(entry.x * cellSize, entry.y * cellSize, cellSize, cellSize);
+            ctx.clearRect(exit.x * cellSize, exit.y * cellSize, cellSize, cellSize);
+        }
+
+        function extractMazeSegments(grid, width, height) {
+            const cellSize = canvas.width / Math.max(width, height);
+            const segments = [];
+
+            for (let y = 0; y < height; y++) {
+                for (let x = 0; x < width; x++) {
+                    const cell = grid[y][x];
+                    if (cell.top) segments.push({ x1: x * cellSize, y1: y * cellSize, x2: (x + 1) * cellSize, y2: y * cellSize });
+                    if (cell.right) segments.push({ x1: (x + 1) * cellSize, y1: y * cellSize, x2: (x + 1) * cellSize, y2: (y + 1) * cellSize });
+                    if (cell.bottom) segments.push({ x1: x * cellSize, y1: (y + 1) * cellSize, x2: (x + 1) * cellSize, y2: (y + 1) * cellSize });
+                    if (cell.left) segments.push({ x1: x * cellSize, y1: y * cellSize, x2: x * cellSize, y2: (y + 1) * cellSize });
+                }
+            }
+            return segments;
+        }
+
+        function resetForms() {
+            document.getElementById('message').value = '';
+            document.getElementById('publicKey').value = '';
+            document.getElementById('encryption-output').innerHTML = '';
+            document.getElementById('decryption-output').innerHTML = '';
+        }
+
+        function generateKey() {
+            return Math.random().toString(36).substring(2);
+        }
+
+        function customEncrypt(message, segments) {
+            const Mid = segments.length;
+            const Cih = message.split('').map((char, i) => char.charCodeAt(0) * (i + 1)).reduce((acc, val) => acc + val, 0);
+
+            const Hd = ((Cih * Mid) / (Mid + 1)) ** 2;
+
+            let encrypted = "";
+            for (let i = 0; i < message.length; i++) {
+                const charCode = message.charCodeAt(i);
+                const segment = segments[i % segments.length];
+                const newCharCode = (charCode + Hd + segment.x1 + segment.y1 + i + 1) % 256;
+                encrypted += String.fromCharCode(newCharCode);
+            }
+            return btoa(encrypted);
+        }
+
+        function customDecrypt(encryptedMessage, segments) {
+            const decodedMessage = atob(encryptedMessage);
+            const Mid = segments.length;
+            const Cih = decodedMessage.split('').map((char, i) => char.charCodeAt(0) * (i + 1)).reduce((acc, val) => acc + val, 0);
+
+            const Hd = ((Cih * Mid) / (Mid + 1)) ** 2;
+
+            let decrypted = "";
+            for (let i = 0; i < decodedMessage.length; i++) {
+                const charCode = decodedMessage.charCodeAt(i);
+                const segment = segments[i % segments.length];
+                const originalCharCode = (charCode - Hd - segment.x1 - segment.y1 - i - 1 + 256) % 256;
+                decrypted += String.fromCharCode(originalCharCode);
+            }
+            return decrypted;
+        }
+
+        function encryptMessage() {
+            const message = document.getElementById('message').value;
+
+            const encryptedMessage = customEncrypt(message, mazeSegments);
+
+            const Mid = mazeSegments.length;
+            const Cih = encryptedMessage.split('').map((char, i) => char.charCodeAt(0) * (i + 1)).reduce((acc, val) => acc + val, 0);
+            const Hd = ((Cih * Mid) / (Mid + 1)) ** 2;
+            const Ep = Math.pow(Hd, (Cih * Mid)) + 1;
+            const Epb = Math.pow(Hd, (Cih * Mid) + 1) + 1;
+
+            document.getElementById('encryption-output').innerHTML = `
+                <p><strong>Encrypted Message:</strong> ${encryptedMessage}</p>
+                <p><strong>Public Key:</strong> ${Epb}</p>
+                <p><strong>Private Key:</strong> ${Ep}</p>
+            `;
+
+            document.getElementById('publicKey').value = Epb;
+        }
+
+        function decryptMessage() {
+            const encryptedMessage = document.querySelector('#encryption-output p:nth-child(1) strong').innerText;
+            const publicKey = parseFloat(document.getElementById('publicKey').value);
+
+            try {
+                const Mid = mazeSegments.length;
+                const Cih = encryptedMessage.split('').map((char, i) => char.charCodeAt(0) * (i + 1)).reduce((acc, val) => acc + val, 0);
+                const Hd = ((Cih * Mid) / (Mid + 1)) ** 2;
+
+                const DEpb = Math.sqrt(Math.pow(Hd, (Cih * Mid) + 1)) + 1;
+                const expectedPublicKey = DEpb + 1;
+
+                if (publicKey === expectedPublicKey) {
+                    const decryptedMessage = customDecrypt(encryptedMessage, mazeSegments);
+                    document.getElementById('decryption-output').innerHTML = `
+                        <p><strong>Decrypted Message:</strong> ${decryptedMessage}</p>
+                    `;
+                } else {
+                    document.getElementById('decryption-output').innerHTML = `
+                        <p><strong>Decryption failed</strong></p>
+                    `;
+                }
+            } catch (error) {
+                console.error('Decryption error:', error);
+                document.getElementById('decryption-output').innerHTML = `
+                    <p><strong>Decryption failed</strong></p>
+                `;
+            }
+        }
+
+        // Initial maze generation
+        generateMaze();
+    </script>
+</body>
+</html>

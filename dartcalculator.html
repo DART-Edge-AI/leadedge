@@ -1,0 +1,299 @@
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Arc Lake</title>
+    <script src="https://unpkg.com/three@0.140.0/build/three.min.js"></script>
+    <script src="https://unpkg.com/three@0.140.0/examples/js/loaders/GLTFLoader.js"></script>
+   <script src="https://unpkg.com/three@0.140.0/examples/js/controls/OrbitControls.js"></script> 
+<!-- 
+<script src="https://unpkg.com/@webxr-polyfill/core@latest">
+  // Initialize WebXRPolyfill
+//  const polyfill = new WebXRPolyfill();
+</script> -->
+    <script src="https://unpkg.com/ar.js@3.3.3/aframe/build/aframe-ar.js"></script>
+<script src="https://unpkg.com/three@0.140.0/examples/js/exporters/GLTFExporter.js"></script>
+    <style>
+        
+
+      
+          body {
+            //    background-image: url(rdautumndev.png);
+              background-size: cover;
+              background-repeat: no-repeat;
+              background-attachment: fixed;
+   z-index: -1;
+    background-position: center center;
+              padding-top: 75px;
+            //  background-color: indigo;
+              margin: 0;
+              font-family: Arial, sans-serif;
+
+     }
+
+   
+  
+  
+  
+
+          h1 {
+              color: white;
+              font-weight: bold;
+              
+          }
+   h2 {
+     
+              color: white;
+              font-weight: bold;
+          font-size: 16px;
+          }
+          .logo2 {
+              
+              width: 300px;
+              height: 300px;
+          }
+      .logo4 {
+              
+              width: 200px;
+              height: 200px;
+          }
+             .logo5 {
+              
+              width: 540px;
+              height: 306px;
+          }
+                 .logo6 {
+                 
+              justify-content: center;
+              width: 400px;
+              height: 100px;
+          }
+               .mainlogo {
+              display: flex;
+              flex-direction: column;
+              justify-content: center;
+              align-items: center;
+              color: white;
+              font-weight: bold;
+              font-size: 20px;
+              border: none;
+              border-radius: 5px;
+              cursor: pointer;
+          }
+          .title {
+              display: flex;
+              flex-direction: column;
+              justify-content: center;
+              align-items: center;
+              color: white;
+              font-weight: bold;
+              font-size: 20px;
+              border: none;
+              border-radius: 5px;
+              cursor: pointer;
+          }
+
+
+
+    /* Add your CSS styles for chat messages here */
+
+
+    /* Add your CSS styles for user messages here */
+
+
+
+
+    .mainlogomn {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-weight: bold;
+            font-size: 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+  .logomn {
+              
+              width: 400px;
+              height: 100%;
+          }
+  
+        .dev {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            
+            font-weight: bold;
+            font-size: 20px;
+         
+        }
+  .aup {
+            
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+
+
+
+/* Style for individual menu items (links) */
+
+
+    #calculator {
+            width: 450px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: rgba(128, 0, 0, 0.2); /* Transparent dark cherry brown */
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        h2 {
+            color: white;
+            font-weight: bold;
+        }
+        label {
+            color: white;
+            font-weight: bold;
+        }
+          
+        .side-by-side {
+        float: left;
+        width: 50%%; /* Adjust the width as needed */
+         /* Add some space between the divs */
+        margin-left: 0%;
+        padding-bottom: 50px;
+        
+    }
+
+      </style>
+
+  </head>
+  <body>
+    
+
+  <div class="title">
+
+  
+
+    <a href="https://aist.earth/" target="_blank"><img src="https://raw.githubusercontent.com/radicaldeepscale/radicaldeepscale.github.io/main/dmdark.png"
+                           alt="Logo4" class="logo4"></a>
+
+
+
+<br>
+<br>
+<div>
+  <a href="mailto:autumn@radicaldeepscale.com" style="color: white; font-weight: bold; text-decoration: none;" target="_blank">
+    <img src="https://static.wixstatic.com/media/2451db_75ad5f87596745778e0a93f8f016536d~mv2.png" alt="Email Image" width="90px">
+  </a>
+</div>
+
+
+
+<div class="lmn">
+           <a href="#">
+        <img src="https://static.wixstatic.com/media/2451db_a179665b107e4b70a2bae980d24c9344~mv2.png"
+             alt="Logomn" class="logomn"> 
+    </a>
+</div>
+
+<br>
+<br>
+<div class="side-by-side">
+<div id="calculator">
+        <h2>Light-Year to | DART | The speed of light cubed.</h2>
+        <label for="lightYearInput">Enter Light-Years:</label>
+        <input type="number" id="lightYearInput" step="any">
+        <br>
+        <br>
+        <dbutton onclick="calculateSpeedOfLightCubed()">Calculate</dbutton>
+        <p id="result"></p>
+    </div>
+    <br>
+<div id="calculator">
+        <h2>Kelvin to Fahrenheit and Celsius</h2>
+        <label for="kelvinInput">Enter Kelvin temperature:</label>
+        <input type="number" id="kelvinInput" placeholder="Enter Kelvin" required>
+        <br>
+        <br>
+        <dbutton onclick="convertTemperature()">Convert</dbutton>
+        <p id="fahrenheitResult">Fahrenheit: </p>
+        <p id="celsiusResult">Celsius: </p>
+    </div>
+
+
+
+
+
+   </div>
+  <script>
+  
+
+    
+        
+    
+   
+     
+   
+          
+
+
+function calculateSpeedOfLightCubed() {
+            const lightYearInput = parseFloat(document.getElementById("lightYearInput").value);
+            const speedOfLightCubed = Math.pow(299792458, 3); // Speed of light cubed in meters per second
+
+            if (!isNaN(lightYearInput)) {
+                const distanceAtSpeedOfLightCubed = lightYearInput * speedOfLightCubed;
+                const lightYearsEquivalent = distanceAtSpeedOfLightCubed / (speedOfLightCubed * 365.25 * 24 * 3600); // Convert to light years
+
+                const years = Math.floor(lightYearsEquivalent);
+                const remainingDays = (lightYearsEquivalent - years) * 365.25;
+                const months = Math.floor(remainingDays / 30.44);
+                const days = Math.floor(remainingDays % 30.44);
+                const hours = Math.floor((remainingDays - days) * 24);
+                const minutes = Math.floor(((remainingDays - days) * 24 - hours) * 60);
+                const seconds = Math.floor((((remainingDays - days) * 24 - hours) * 60 - minutes) * 60);
+
+                document.getElementById("result").textContent = `At the speed of light cubed, you would cover a distance equivalent to approximately ${years} years, ${months} months, ${days} days, ${hours} hours, ${minutes} minutes, and ${seconds} seconds in terms of DART travel.`;
+            } else {
+                document.getElementById("result").textContent = "Please enter a valid number of light-years.";
+            }
+        }
+function convertTemperature() {
+            // Get Kelvin input value
+            var kelvinValue = parseFloat(document.getElementById("kelvinInput").value);
+
+            // Convert Kelvin to Fahrenheit
+            var fahrenheitValue = (kelvinValue - 273.15) * 9/5 + 32;
+
+            // Convert Kelvin to Celsius
+            var celsiusValue = kelvinValue - 273.15;
+
+            // Display results
+            document.getElementById("fahrenheitResult").textContent = "Fahrenheit: " + fahrenheitValue.toFixed(2) + " °F";
+            document.getElementById("celsiusResult").textContent = "Celsius: " + celsiusValue.toFixed(2) + " °C";
+        }
+
+
+
+
+
+
+  </script>
+
+  </body>
+  </html>
+
+
+      
+  
