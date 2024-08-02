@@ -1,0 +1,21 @@
+schema_version = "1.0.0"
+
+id = "lead_edge_maze_ash_creator"
+version = "1.0.0"
+name = "Lead Edge Maze Ash Creator"
+description = "Generates and solves 3D Lead Edge Mazes within Blender"
+authors = ["Justin Venable CEO @ Radical Deepscale LLC"]
+maintainer = "Radical Deepscale"
+website = "http://www.dartmeadow.com/"
+tracker_url = "http://www.dartmeadow.com/lead-edge"
+category = "Object"
+
+tags = ["LeadEdge", "Pathfinding", "AddMesh", "AshTreeReflex"]
+
+
+blender_version_min = "4.2.0"
+
+
+license = [
+  "SPDX:GPL-2.0-or-later",
+]
