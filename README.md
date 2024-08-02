@@ -1,14 +1,17 @@
 # Blender: Lead Edge Ash Extension 
 #
 ![Lead Edge](https://raw.githubusercontent.com/DART-Edge-AI/leadedge/main/LeadEdgeHornet150.png)
-open the Properties Pane: Shorcut "N"
 #
-Access the Lead Edge Panel
+1. Open the Properties Pane: Shorcut "N"
 
-Specify Deminsions
+2. Access the Lead Edge Panel
 
-Generate Lead Edge Ash
+3. Specify Deminsions
 
+4. Generate Lead Edge Ash
+   
+5. Optional: Solve Lead Edge Ash
+#
 Direct blender Script import/copy/paste in lender script editor - press play.
 download: [Lead Edge](https://github.com/DART-Edge-AI/leadedge/blob/main/LeadEdge.py)
 #
