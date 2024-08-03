@@ -13,7 +13,7 @@
    
 5. Optional: Solve Lead Edge Ash
 #
-Currently The Path is Solvable but the 2 perimeter opennings are not Marked. You May select 2 segements along the Path Mesh ends where the 
+Currently The Path is Solvable but the 2 perimeter openings are not Marked. You May select 2 segements along the Path Mesh ends where the 
 Path Mesh meets the Perimeter to edit your own openings or for larger Iterations anywhere along the Path  Mesh where the Path Mesh meets the perimeter to speed up the Project Flow.
 #
 Add-on  Install from zip: [Lead Edge](https://github.com/DART-Edge-AI/leadedge/raw/main/LeadEdge.zip)
