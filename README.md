@@ -1,7 +1,8 @@
 # Blender: Lead Edge Ash Extension 
 #
 ![Lead Edge](https://raw.githubusercontent.com/DART-Edge-AI/leadedge/main/LeadEdgeHornet150.png)
-# Usage:
+#
+## Usage:
 1. Open the Properties Pane: Shorcut "N"
 
 2. Access the Lead Edge Panel
