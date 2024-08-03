@@ -25,7 +25,7 @@ Add-on  Install from zip: [Lead Edge](https://github.com/DART-Edge-AI/leadedge/r
 Direct blender Script import/copy/paste in lender script editor - press play.
 download: [Lead Edge](https://github.com/DART-Edge-AI/leadedge/blob/main/LeadEdge.py)
 #
-![Lead Edge](https://static.wixstatic.com/media/2451db_43d17402beed42a0856ccd72eaa55027~mv2.png)
+![Lead Edge](https://raw.githubusercontent.com/DART-Edge-AI/leadedge/main/Screenshot%202024-08-03%20111615.png)
 #
 #
 Lead Edge Algorithm for Ash Tree Reflex
