@@ -12,6 +12,12 @@
    
 5. Optional: Solve Lead Edge Ash
 #
+Add-on  Install from zip: [Lead Edge](https://github.com/DART-Edge-AI/leadedge/raw/main/LeadEdge.zip)
+1. Blender: Preferences
+2. Add-ons tab
+3. Upper right Corner Menu Popup: Install From Disk, Select Downloaded Zip
+4. Enable and Save Preferences then Blender Startup File
+#
 Direct blender Script import/copy/paste in lender script editor - press play.
 download: [Lead Edge](https://github.com/DART-Edge-AI/leadedge/blob/main/LeadEdge.py)
 #
