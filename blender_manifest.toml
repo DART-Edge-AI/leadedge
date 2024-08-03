@@ -8,7 +8,7 @@ authors = ["Justin Venable CEO @ Radical Deepscale LLC"]
 maintainer = "Radical Deepscale"
 website = "http://www.dartmeadow.com/"
 tracker_url = "http://www.dartmeadow.com/lead-edge"
-category = "Object"
+type = "Object"
 
 tags = ["LeadEdge", "Pathfinding", "AddMesh", "AshTreeReflex"]
 

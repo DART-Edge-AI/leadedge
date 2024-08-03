@@ -1,9 +1,9 @@
 bl_info = {
-    "name": "Lead Edge Maze Creator",
-    "blender": (2, 82, 0),
+    "name": "Lead Edge Maze Ash Creator",
+    "blender": (4, 2, 0),
     "category": "Object",
     "version": (1, 0, 0),
-    "author": "Your Name",
+    "maintainer": "Radical Deepscale",
     "description": "Generates and solves 3D mazes within Blender"
 }
 
@@ -19,16 +19,6 @@ maze_data = {
     "start": None,
     "end": None
 }
-
-# Define colors for materials
-def create_material(name, color):
-    material = bpy.data.materials.new(name=name)
-    material.diffuse_color = color
-    return material
-
-blue_material = create_material("BlueWallMaterial", (0.0, 0.0, 1.0, 1.0))  # Blue for walls
-red_material = create_material("EntryExitMaterial", (1.0, 0.0, 0.0, 1.0))  # Red for entry/exit
-green_material = create_material("PathMaterial", (0.0, 1.0, 0.0, 1.0))  # Green for path
 
 class MazePanel(bpy.types.Panel):
     """Creates a Panel in the Object properties window"""
@@ -124,58 +114,45 @@ def draw_3d_maze(grid, unit_size, wall_height, start, end):
     bpy.context.collection.objects.link(obj)
     bm = bmesh.new()
 
-    # Create walls and assign materials
+    # Create walls without assigning materials
     for y in range(len(grid)):
         for x in range(len(grid[0])):
             cell = grid[y][x]
             base_x = x * unit_size
             base_y = y * unit_size
 
-            if (x, y) == start or (x, y) == end:
-                material_index = 1  # Use red material for entry/exit
-            else:
-                material_index = 0  # Use blue material for walls
-
             if cell['top']:
                 v1 = bm.verts.new((base_x, base_y, 0))
                 v2 = bm.verts.new((base_x + unit_size, base_y, 0))
                 v3 = bm.verts.new((base_x + unit_size, base_y, wall_height))
                 v4 = bm.verts.new((base_x, base_y, wall_height))
-                face = bm.faces.new((v1, v2, v3, v4))
-                face.material_index = material_index
+                bm.faces.new((v1, v2, v3, v4))
 
             if cell['right']:
                 v1 = bm.verts.new((base_x + unit_size, base_y, 0))
                 v2 = bm.verts.new((base_x + unit_size, base_y + unit_size, 0))
                 v3 = bm.verts.new((base_x + unit_size, base_y + unit_size, wall_height))
                 v4 = bm.verts.new((base_x + unit_size, base_y, wall_height))
-                face = bm.faces.new((v1, v2, v3, v4))
-                face.material_index = material_index
+                bm.faces.new((v1, v2, v3, v4))
 
             if cell['bottom']:
                 v1 = bm.verts.new((base_x, base_y + unit_size, 0))
                 v2 = bm.verts.new((base_x + unit_size, base_y + unit_size, 0))
                 v3 = bm.verts.new((base_x + unit_size, base_y + unit_size, wall_height))
                 v4 = bm.verts.new((base_x, base_y + unit_size, wall_height))
-                face = bm.faces.new((v1, v2, v3, v4))
-                face.material_index = material_index
+                bm.faces.new((v1, v2, v3, v4))
 
             if cell['left']:
                 v1 = bm.verts.new((base_x, base_y, 0))
                 v2 = bm.verts.new((base_x, base_y + unit_size, 0))
                 v3 = bm.verts.new((base_x, base_y + unit_size, wall_height))
                 v4 = bm.verts.new((base_x, base_y, wall_height))
-                face = bm.faces.new((v1, v2, v3, v4))
-                face.material_index = material_index
+                bm.faces.new((v1, v2, v3, v4))
 
     bm.to_mesh(mesh)
     bm.free()
     center_geometry(obj)  # Center the geometry after mesh creation
     obj.location = (-len(grid[0]) * unit_size / 2, -len(grid) * unit_size / 2, 0)  # Center the maze
-
-    # Assign materials to the mesh
-    obj.data.materials.append(blue_material)  # Material for walls
-    obj.data.materials.append(red_material)   # Material for entry/exit
 
 def solve_maze(grid, start, end, unit_size, wall_height):
     width = len(grid[0])
@@ -238,7 +215,6 @@ def draw_path(path, unit_size, wall_height, grid_size):
     # Optionally, adjust the object's location to be exactly over the maze
     obj.location = (0, 0, 0)
 
-    
 def center_geometry(obj):
     # Set origin to geometry center
     bpy.context.view_layer.objects.active = obj
