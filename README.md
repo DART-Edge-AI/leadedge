@@ -1,7 +1,7 @@
 # Blender: Lead Edge Ash Extension 
 #
 ![Lead Edge](https://raw.githubusercontent.com/DART-Edge-AI/leadedge/main/LeadEdgeHornet150.png)
-#
+# Usage:
 1. Open the Properties Pane: Shorcut "N"
 
 2. Access the Lead Edge Panel
@@ -11,6 +11,9 @@
 4. Generate Lead Edge Ash
    
 5. Optional: Solve Lead Edge Ash
+#
+Currently The Path is Solvable but the 2 perimeter opennings are not Marked. You May select 2 segements along the Path Mesh ends where the 
+Path Mesh meets the Perimeter to edit your own openings or for larger Iterations anywhere along the Path  Mesh where the Path Mesh meets the perimeter to speed up the Project Flow.
 #
 Add-on  Install from zip: [Lead Edge](https://github.com/DART-Edge-AI/leadedge/raw/main/LeadEdge.zip)
 1. Blender: Preferences
