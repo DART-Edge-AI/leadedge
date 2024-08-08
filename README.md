@@ -1,6 +1,8 @@
 # Blender: Lead Edge Ash Extension 
 #
-![Lead Edge](https://raw.githubusercontent.com/DART-Edge-AI/leadedge/main/LeadEdgeHornet150.png)
+<p align="center">
+  <img src="https://raw.githubusercontent.com/DART-Edge-AI/leadedge/main/LeadEdgeHornet150.png" />
+</p>()
 #
 ## Usage:
 1. Open the Properties Pane: Shorcut "N"
