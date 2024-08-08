@@ -4,6 +4,7 @@
 <p align="center">
   <img src="https://raw.githubusercontent.com/DART-Edge-AI/leadedge/main/LeadEdgeHornet150.png" />
 </p>
+
 #
 
 ## Usage:
