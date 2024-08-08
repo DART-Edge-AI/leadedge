@@ -2,7 +2,7 @@
 #
 <p align="center">
   <img src="https://raw.githubusercontent.com/DART-Edge-AI/leadedge/main/LeadEdgeHornet150.png" />
-</p>()
+</p>
 #
 ## Usage:
 1. Open the Properties Pane: Shorcut "N"
